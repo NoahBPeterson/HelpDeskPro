@@ -20,7 +20,23 @@
   - [ ] Auto-logout on inactivity
   - [ ] Concurrent session handling
 
-### 2. Ticket Management
+### 2. Invitation System & Onboarding
+- [ ] Create "invitations" table with token and expiration
+- [ ] Implement invitation flows
+  - [ ] Agent/admin can invite new users
+  - [ ] Track invitation status (pending, accepted, rejected)
+  - [ ] Generate secure invitation tokens
+  - [ ] Handle token expiration
+- [ ] Automated relationship creation
+  - [ ] Create triggers for auto-linking invited users
+  - [ ] Send welcome emails on acceptance
+  - [ ] Set up proper workspace access
+- [ ] Email integration
+  - [ ] Send invitation emails with secure tokens
+  - [ ] Welcome email templates
+  - [ ] Email verification flow
+
+### 3. Ticket Management
 - [x] Create ticket form for users/customers
 - [x] Ticket status management (New, Open, Pending, Solved, Closed)
 - [ ] Ticket assignment system (assign to agents)
@@ -30,15 +46,22 @@
 - [ ] Full conversation history (customer & agent messages)
 - [ ] Bulk operations for queue management (optional enhancement)
 
-### 3. User Management & Roles
+### 4. User Management & Roles
 - [x] Authentication system (Supabase Auth)
 - [ ] Role-based permissions (Admin, Agent, End-user)
 - [ ] User profile management
+  - [ ] Extended profile fields (full name, avatar, phone)
+  - [ ] Profile editing interface
+  - [ ] Contact preferences
 - [ ] Workspace-specific user access
-- [ ] Team management (create/manage teams, coverage schedules)
+- [ ] Team management
+  - [ ] Create/manage teams
+  - [ ] Team-based ticket routing
+  - [ ] Coverage schedules
+  - [ ] Agent-customer relationships
 - [ ] Skills-based routing (assign tickets based on agent skills)
 
-### 4. Workspace Isolation (Multi-Tenant)
+### 5. Workspace Isolation (Multi-Tenant)
 - [ ] Unique workspace creation with slugs
 - [ ] Workspace-specific branding/configuration
 - [x] Data isolation between workspaces (tenant-level RLS)
@@ -51,9 +74,20 @@
 - [x] Create users table
 - [x] Create tickets table
 - [x] Create comments table
+- [ ] Create additional tables
+  - [ ] Invitations table
+  - [ ] Team/relationship tables
+  - [ ] User profiles table
 - [x] Set up Supabase connection
 - [x] Configure row-level security policies
+  - [ ] RLS for invitations table
+  - [ ] RLS for team/relationship tables
+  - [ ] RLS for user profiles
 - [x] Set up authentication hooks
+- [ ] Database optimization
+  - [ ] Add proper indexes (foreign keys, tokens)
+  - [ ] Query performance tuning
+  - [ ] Connection pooling setup
 - [ ] Implement event-driven webhooks (optional)
 - [ ] Configure vector storage (for AI knowledge base/query)
 
