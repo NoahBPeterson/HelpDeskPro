@@ -4,7 +4,7 @@ import {
     Clock,
     FolderOpen,
     Inbox,
-    TrendingUp,
+    AlertCircle,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
@@ -26,6 +26,36 @@ function formatRelativeTime(date: string) {
     } else {
         const days = Math.floor(diffInSeconds / 86400);
         return `${days} day${days === 1 ? '' : 's'} ago`;
+    }
+}
+
+function getStatusColor(status: string) {
+    switch (status) {
+        case 'new':
+            return 'bg-blue-100 text-blue-800';
+        case 'open':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'pending':
+            return 'bg-orange-100 text-orange-800';
+        case 'solved':
+            return 'bg-green-100 text-green-800';
+        case 'closed':
+            return 'bg-gray-100 text-gray-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getPriorityColor(priority: string) {
+    switch (priority) {
+        case 'high':
+            return 'text-red-500';
+        case 'medium':
+            return 'text-yellow-500';
+        case 'low':
+            return 'text-green-500';
+        default:
+            return 'text-gray-500';
     }
 }
 
@@ -84,15 +114,14 @@ export function Dashboard() {
 
                 // Generate recent activity from tickets
                 if (tickets) {
-                    const activity: Activity[] = tickets.slice(0, 5).map(ticket => ({
-                        id: ticket.id,
-                        type: 'ticket_created',
-                        ticketId: ticket.id,
-                        ticketTitle: ticket.title,
-                        timestamp: ticket.created_at,
-                        user: ticket.created_by_user_id
+                    const recentActivity: Activity[] = tickets.slice(0, 5).map((ticket, index) => ({
+                        id: index,
+                        type: ticket.priority ? 'priority' : 'status',
+                        value: ticket.priority || ticket.status,
+                        message: `Ticket "${ticket.title}" was created`,
+                        time: formatRelativeTime(new Date(ticket.created_at).toISOString())
                     }));
-                    setRecentActivity(activity);
+                    setRecentActivity(recentActivity);
                 }
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
@@ -168,20 +197,31 @@ export function Dashboard() {
                     </div>
                     <div className="p-4">
                         <div className="space-y-4">
-                            {recentActivity.map((activity) => (
-                                <div key={activity.id} className="flex items-start space-x-3">
-                                    <TrendingUp className="text-blue-500 mt-1" size={20} />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            New ticket created
-                                        </p>
+                            {recentActivity.map((activity, index) => (
+                                <div key={index} className="flex items-center space-x-3 py-3">
+                                    {activity.type === 'priority' ? (
+                                        <span className={`${getPriorityColor(activity.value)}`}>
+                                            {activity.value === 'high' ? (
+                                                <AlertCircle size={20} />
+                                            ) : activity.value === 'medium' ? (
+                                                <Clock size={20} />
+                                            ) : (
+                                                <CheckCircle size={20} />
+                                            )}
+                                        </span>
+                                    ) : (
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.value)}`}>
+                                            {activity.value}
+                                        </span>
+                                    )}
+                                    <div className="min-w-0 flex-1">
                                         <p className="text-sm text-gray-500">
-                                            {activity.ticketTitle}
-                                        </p>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            {formatRelativeTime(activity.timestamp)}
+                                            {activity.message}
                                         </p>
                                     </div>
+                                    <time className="text-sm text-gray-500">
+                                        {activity.time}
+                                    </time>
                                 </div>
                             ))}
                         </div>

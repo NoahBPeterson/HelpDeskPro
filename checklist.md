@@ -24,8 +24,8 @@
 - [x] Create ticket form for users/customers
 - [x] Ticket status management (New, Open, Pending, Solved, Closed)
 - [ ] Ticket assignment system (assign to agents)
-- [ ] Ticket priority levels (Low, Medium, High)
-- [ ] Ticket viewing/updating interface for agents
+- [x] Ticket priority levels (Low, Medium, High)
+- [x] Ticket viewing/updating interface for agents
 - [ ] Internal notes for agent collaboration
 - [ ] Full conversation history (customer & agent messages)
 - [ ] Bulk operations for queue management (optional enhancement)
@@ -62,10 +62,14 @@
 - [x] Configure TypeScript
 - [x] Create main layout/navigation
 - [x] Implement user authentication flows
-- [ ] Build ticket management interface (list, filter, detail)
+- [ ] Build ticket management interface
+  - [x] List view
+  - [ ] Filtering and sorting
+  - [ ] Detail view
 - [ ] Create workspace-specific views
 - [x] Add responsive design
 - [ ] Integrate real-time updates (via Supabase realtime or similar)
+- [ ] Add caching and realtime updates for Dashboard and TicketList components
 
 ### Deployment (AWS Amplify)
 - [x] Set up AWS Amplify project

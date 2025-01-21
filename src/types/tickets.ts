@@ -29,12 +29,11 @@ export type Stats = {
 };
 
 export type Activity = {
-    id: string;
-    type: 'ticket_created' | 'status_changed' | 'comment_added';
-    ticketId: string;
-    ticketTitle: string;
-    timestamp: string;
-    user: string;
-}; 
+    id: number;
+    type: 'status' | 'priority';
+    value: string;
+    message: string;
+    time: string;
+};
 
 export type User = UserRow;
