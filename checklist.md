@@ -17,8 +17,6 @@
   - [x] Frontend route guards
 - [x] Session management
   - [x] Token refresh
-  - [ ] Auto-logout on inactivity
-  - [ ] Concurrent session handling
 
 ### 2. Invitation System & Onboarding
 - [ ] Create "invitations" table with token and expiration

@@ -215,7 +215,7 @@ export function Dashboard() {
                                         </span>
                                     )}
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm text-gray-500">
+                                        <p className="text-sm text-gray-500 line-clamp-2">
                                             {activity.message}
                                         </p>
                                     </div>

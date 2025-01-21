@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
-import { AlertCircle, Clock, CheckCircle } from "lucide-react";
+import { Flag } from "lucide-react";
 import { Ticket } from "../types/tickets";
 
 type TicketWithCreator = Ticket & {
@@ -36,12 +36,14 @@ function getStatusColor(status: Ticket['status']) {
 
 function getPriorityIcon(priority: Ticket['priority']) {
     switch (priority) {
-        case 'high':
-            return <AlertCircle className="text-red-500" size={20} />;
-        case 'medium':
-            return <Clock className="text-yellow-500" size={20} />;
         case 'low':
-            return <CheckCircle className="text-green-500" size={20} />;
+            return <Flag className="text-gray-500" size={18} />;
+        case 'medium':
+            return <Flag className="text-yellow-500" size={18} />;
+        case 'high':
+            return <Flag className="text-red-500" size={18} />;
+        default:
+            return null;
     }
 }
 

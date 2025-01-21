@@ -9,6 +9,7 @@ import './App.css'
 import { TicketList } from './components/TicketList'
 import { CreateTicket } from './components/CreateTicket'
 import { ViewTicket } from './components/ViewTicket'
+import { InviteUsers } from './components/InviteUsers'
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
                     <Route path="/tickets" element={<TicketList />} />
                     <Route path="/create" element={<CreateTicket />} />
                     <Route path="/ticket/:id" element={<ViewTicket />} />
+                    <Route path="/invite" element={<InviteUsers />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
