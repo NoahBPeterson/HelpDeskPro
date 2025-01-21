@@ -1,4 +1,3 @@
-import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, AlertCircle, CheckCircle, ArrowLeft } from "lucide-react";
 export function ViewTicket() {
