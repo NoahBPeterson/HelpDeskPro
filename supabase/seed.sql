@@ -42,14 +42,16 @@ CREATE TABLE IF NOT EXISTS comments (
 -- Enable RLS
 ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 
--- Users can only read their own workspace
-CREATE POLICY "Users can view their own workspace"
-ON workspaces FOR SELECT
-USING (id IN (
-  SELECT workspace_id 
-  FROM users 
-  WHERE auth.uid() = id
-));
+-- Users can view their own workspace
+CREATE POLICY "Users can view own workspace" ON workspaces
+FOR SELECT
+USING (
+  id IN (
+    SELECT workspace_id 
+    FROM users 
+    WHERE id = auth.uid()
+  )
+);
 
 -- Only admins can create/update workspaces
 CREATE POLICY "Admins can manage workspaces"
@@ -64,19 +66,26 @@ USING (EXISTS (
 -- Enable RLS
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
--- Users can read other users in their workspace
-CREATE POLICY "Users can view others in their workspace"
-ON users FOR SELECT
-USING (workspace_id IN (
-  SELECT workspace_id 
-  FROM users 
-  WHERE auth.uid() = id
-));
+-- Allow users to read other users in their workspace
+CREATE POLICY "Users can view users in same workspace" ON users
+FOR SELECT
+USING (
+  workspace_id IN (
+    SELECT workspace_id 
+    FROM users 
+    WHERE id = auth.uid()
+  )
+);
 
--- Users can update their own profile
-CREATE POLICY "Users can update their own profile"
-ON users FOR UPDATE
-USING (auth.uid() = id)
+-- Users can update their own record
+CREATE POLICY "Users can update own record" ON users
+FOR UPDATE
+USING (id = auth.uid())
+WITH CHECK (id = auth.uid());
+
+-- Allow insert during signup
+CREATE POLICY "Allow insert during signup" ON users
+FOR INSERT
 WITH CHECK (auth.uid() = id);
 
 -- Only admins can create/delete users in their workspace

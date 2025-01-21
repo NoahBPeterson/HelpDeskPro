@@ -96,6 +96,7 @@ export interface Database {
           ticket_id: string
           author_id: string
           content: string
+          type: 'reply' | 'note' | 'status_change' | 'assignment' | 'system'
           created_at: string
         }
         Insert: {
@@ -103,6 +104,7 @@ export interface Database {
           ticket_id: string
           author_id: string
           content: string
+          type?: 'reply' | 'note' | 'status_change' | 'assignment' | 'system'
           created_at?: string
         }
         Update: {
@@ -110,6 +112,7 @@ export interface Database {
           ticket_id?: string
           author_id?: string
           content?: string
+          type?: 'reply' | 'note' | 'status_change' | 'assignment' | 'system'
           created_at?: string
         }
       }

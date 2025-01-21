@@ -1,10 +1,14 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { Dashboard } from './pages/Dashboard'
+import { Layout } from './components/Layout'
 import './App.css'
+import { TicketList } from './components/TicketList'
+import { CreateTicket } from './components/CreateTicket'
+import { ViewTicket } from './components/ViewTicket'
 
 function App() {
   return (
@@ -14,14 +18,21 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
-            path="/dashboard"
+            path="/*"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/tickets" element={<TicketList />} />
+                    <Route path="/create" element={<CreateTicket />} />
+                    <Route path="/ticket/:id" element={<ViewTicket />} />
+                  </Routes>
+                </Layout>
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
     </Router>

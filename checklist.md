@@ -1,4 +1,4 @@
-# Zendesk Clone Project Checklist
+# Zendesk Clone (AutoCRM) Project Checklist
 
 ## Core Features
 
@@ -8,12 +8,12 @@
   - [ ] OAuth providers (Google, GitHub)
   - [ ] Password reset flow
   - [x] Email verification
-- [ ] Authorization Rules
-  - [ ] Row Level Security (RLS) policies
-    - [ ] Workspace isolation
-    - [ ] Role-based access
-    - [ ] Ticket visibility rules
-  - [ ] API endpoint protection
+- [x] Authorization Rules
+  - [x] Row Level Security (RLS) policies
+    - [x] Workspace isolation
+    - [x] Role-based access
+    - [x] Ticket visibility rules
+  - [x] API endpoint protection
   - [x] Frontend route guards
 - [x] Session management
   - [x] Token refresh
@@ -21,22 +21,27 @@
   - [ ] Concurrent session handling
 
 ### 2. Ticket Management
-- [ ] Create ticket form for users/customers
-- [ ] Ticket status management (New, Open, Pending, Solved, Closed)
-- [ ] Ticket assignment system
+- [x] Create ticket form for users/customers
+- [x] Ticket status management (New, Open, Pending, Solved, Closed)
+- [ ] Ticket assignment system (assign to agents)
 - [ ] Ticket priority levels (Low, Medium, High)
 - [ ] Ticket viewing/updating interface for agents
+- [ ] Internal notes for agent collaboration
+- [ ] Full conversation history (customer & agent messages)
+- [ ] Bulk operations for queue management (optional enhancement)
 
 ### 3. User Management & Roles
 - [x] Authentication system (Supabase Auth)
 - [ ] Role-based permissions (Admin, Agent, End-user)
 - [ ] User profile management
 - [ ] Workspace-specific user access
+- [ ] Team management (create/manage teams, coverage schedules)
+- [ ] Skills-based routing (assign tickets based on agent skills)
 
 ### 4. Workspace Isolation (Multi-Tenant)
 - [ ] Unique workspace creation with slugs
 - [ ] Workspace-specific branding/configuration
-- [ ] Data isolation between workspaces
+- [x] Data isolation between workspaces (tenant-level RLS)
 - [ ] Workspace management interface
 
 ## Technical Implementation
@@ -47,46 +52,70 @@
 - [x] Create tickets table
 - [x] Create comments table
 - [x] Set up Supabase connection
-- [ ] Configure row-level security policies
+- [x] Configure row-level security policies
 - [x] Set up authentication hooks
+- [ ] Implement event-driven webhooks (optional)
+- [ ] Configure vector storage (for AI knowledge base/query)
 
 ### Frontend (React + Vite + Bun)
 - [x] Set up React with Vite
 - [x] Configure TypeScript
 - [x] Create main layout/navigation
 - [x] Implement user authentication flows
-- [ ] Build ticket management interface
+- [ ] Build ticket management interface (list, filter, detail)
 - [ ] Create workspace-specific views
 - [x] Add responsive design
+- [ ] Integrate real-time updates (via Supabase realtime or similar)
 
 ### Deployment (AWS Amplify)
-- [ ] Set up AWS Amplify project
-- [ ] Configure build settings
-- [ ] Set up environment variables
-- [ ] Configure continuous deployment
-- [ ] Set up custom domain (if needed)
+- [x] Set up AWS Amplify project
+- [x] Configure build settings (bun run build → dist)
+- [x] Set up environment variables (Supabase url/keys)
+- [x] Configure continuous deployment
+- [ ] Set up custom domain (optional)
+
+## AI Integration (Week 2 Objectives)
+- [ ] LLM-generated responses for tickets
+- [ ] RAG-based knowledge retrieval (context for LLM)
+- [ ] AI-driven ticket routing (agentic approach)
+- [ ] Human-assisted suggestions/prepopulation
+- [ ] AI-summarized ticket/system status for admins
+- [ ] Learning system for repeated resolutions
+
+## Customer Portal & Self-Service
+- [ ] Customer ticket tracking portal (ticket view/update)
+- [ ] Knowledge base (searchable FAQs, articles)
+- [ ] AI-powered chatbot (auto-response & triage)
+- [ ] Public/secured article support (for different user roles)
+
+## Administrative Control & Reporting
+- [ ] Dashboard with metrics (response times, resolution rates)
+- [ ] Rule-based assignment & SLA monitoring
+- [ ] Ticket escalations and routing intelligence
+- [ ] Performance optimization (caching, query tuning)
 
 ## Future Enhancements
+- [ ] Multi-channel support (Email, Chat, Social Media)
+- [ ] Automation & workflows (automatic ticket assignment/escalation)
+- [ ] Advanced analytics & reporting (agent performance, volume metrics)
+- [ ] Additional languages & localization
+- [ ] Audio/visual attachment support for tickets
+- [ ] Multi-modal support (e.g., phone transcripts, voice to text)
 
-### Multi-Channel Support
-- [ ] Email integration
-- [ ] Chat widget
-- [ ] Social media integration
-
-### Automation & Workflows
-- [ ] Automatic ticket assignment
-- [ ] Ticket escalation rules
-- [ ] SLA monitoring
-- [ ] Email notifications
-
-### Analytics & Reporting
-- [ ] Basic metrics dashboard
-- [ ] Response time tracking
-- [ ] Agent performance metrics
-- [ ] Ticket volume analytics
-
-### Knowledge Base
-- [ ] Article creation interface
-- [ ] Public/private article support
-- [ ] Search functionality
-- [ ] Category management 
+## Test2Pass (T2P) Requirements
+- [ ] Brainlift Documentation
+  - [ ] Purpose
+  - [ ] Experts
+  - [ ] Spiky POVs
+  - [ ] Knowledge Tree
+  - [ ] External Resources (≥5 credible sources)
+  - [ ] Impact on project/LLM behavior
+- [ ] Video Walkthrough (3-5 minutes)
+  - [ ] Public link for demonstration
+  - [ ] End-to-end ticket lifecycle showcase
+  - [ ] AI agent involvement demo (response, routing, escalation)
+- [ ] Git Repository
+  - [ ] High-quality, production-grade code
+  - [ ] Automated testing (unit, integration, edge cases)
+  - [ ] CI/CD pipeline with automated build/test/deploy
+  - [ ] Passing autograder checks for style & formatting 
