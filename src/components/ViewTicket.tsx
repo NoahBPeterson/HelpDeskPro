@@ -41,6 +41,7 @@ export function ViewTicket() {
     const [newComment, setNewComment] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [agents, setAgents] = useState<Agent[]>([]);
+    const [isInternalNote, setIsInternalNote] = useState(false);
 
     useEffect(() => {
         async function fetchTicket() {
@@ -123,7 +124,8 @@ export function ViewTicket() {
                 .insert({
                     ticket_id: ticket.id,
                     content: newComment.trim(),
-                    author_id: session.user.id
+                    author_id: session.user.id,
+                    type: isInternalNote ? 'note' : 'reply'
                 });
 
             if (error) throw error;
@@ -306,9 +308,23 @@ export function ViewTicket() {
                                     <p className="text-sm text-gray-500">No updates yet</p>
                                 ) : (
                                     comments.map((comment) => (
-                                        <div key={comment.id} className="bg-gray-50 rounded-lg p-3 mb-3">
+                                        <div 
+                                            key={comment.id} 
+                                            className={`rounded-lg p-3 mb-3 ${
+                                                comment.type === 'note' 
+                                                    ? 'bg-yellow-50 border border-yellow-200' 
+                                                    : 'bg-gray-50'
+                                            }`}
+                                        >
                                             <div className="flex justify-between text-sm">
-                                                <span className="font-medium">{comment.user.email}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium">{comment.user.email}</span>
+                                                    {comment.type === 'note' && (
+                                                        <span className="text-yellow-600 text-xs bg-yellow-100 px-2 py-0.5 rounded-full">
+                                                            Internal Note
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <span className="text-gray-500">
                                                     {formatDate(comment.created_at)}
                                                 </span>
@@ -318,25 +334,35 @@ export function ViewTicket() {
                                     ))
                                 )}
                             </div>
-                            <form onSubmit={handleSubmitComment} className="border-t pt-4">
-                                <h3 className="text-sm font-medium text-gray-700 mb-2">
-                                    Add Response
-                                </h3>
-                                <textarea
-                                    rows={3}
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                    placeholder="Type your response..."
-                                    required
-                                />
-                                <div className="mt-3 flex justify-end">
+                            <form onSubmit={handleSubmitComment} className="mt-4">
+                                <div className="mb-2">
+                                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                                        <input
+                                            type="checkbox"
+                                            checked={isInternalNote}
+                                            onChange={(e) => setIsInternalNote(e.target.checked)}
+                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        Make this an internal note (only visible to agents)
+                                    </label>
+                                </div>
+                                <div className="flex gap-2">
+                                    <textarea
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        placeholder={isInternalNote ? "Add an internal note..." : "Add a comment..."}
+                                        className="flex-1 min-h-[100px] rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    />
                                     <button
                                         type="submit"
-                                        disabled={isSubmitting}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled={isSubmitting || !newComment.trim()}
+                                        className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                                            isInternalNote
+                                                ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                                                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                                     >
-                                        {isSubmitting ? 'Sending...' : 'Send Response'}
+                                        {isSubmitting ? 'Sending...' : isInternalNote ? 'Add Note' : 'Send'}
                                     </button>
                                 </div>
                             </form>

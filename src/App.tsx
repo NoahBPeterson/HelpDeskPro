@@ -10,6 +10,7 @@ import { TicketList } from './components/TicketList'
 import { CreateTicket } from './components/CreateTicket'
 import { ViewTicket } from './components/ViewTicket'
 import { InviteUsers } from './components/InviteUsers'
+import { AcceptInvite } from "./pages/AcceptInvite"
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
                     <Route path="/create" element={<CreateTicket />} />
                     <Route path="/ticket/:id" element={<ViewTicket />} />
                     <Route path="/invite" element={<InviteUsers />} />
+                    <Route path="/accept-invite" element={<AcceptInvite />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

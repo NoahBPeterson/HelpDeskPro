@@ -1,20 +1,24 @@
-import React, { useState } from "react";
-import { X, Plus, Mail, AlertCircle, CheckCircle } from "lucide-react";
-interface Invitation {
-  email: string;
-  role: string;
-  status: "pending" | "sent" | "error";
-}
+import React, { useState, useEffect } from "react";
+import { X, Plus, Mail, AlertCircle } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../hooks/useAuth";
+import { Database } from "../lib/database.types";
+
+type Invitation = Database['public']['Tables']['invitations']['Row'];
+
 export function InviteUsers() {
+  const { session } = useAuth();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("end-user");
+  const [role, setRole] = useState<Invitation['role']>("end_user");
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [bulkEmails, setBulkEmails] = useState("");
   const [showBulkInput, setShowBulkInput] = useState(false);
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const roles = [
     {
-      id: "end-user",
+      id: "end_user",
       label: "End User",
     },
     {
@@ -26,56 +30,167 @@ export function InviteUsers() {
       label: "Administrator",
     },
   ];
+
+  // Fetch existing invitations
+  useEffect(() => {
+    async function fetchInvitations() {
+      if (!session?.user) return;
+
+      const { data, error } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('status', 'pending');
+
+      if (error) {
+        console.error('Error fetching invitations:', error);
+        return;
+      }
+
+      setInvitations(data);
+    }
+
+    fetchInvitations();
+  }, [session]);
+
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   };
-  const handleSingleInvite = (e: React.FormEvent) => {
+
+  const handleSingleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!session?.user) return;
+
     if (!validateEmail(email)) {
       setError("Please enter a valid email address");
       return;
     }
-    if (invitations.some((inv) => inv.email === email)) {
-      setError("This email has already been invited");
-      return;
-    }
-    setInvitations([
-      ...invitations,
-      {
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Send magic link
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          data: {
+            role,
+            workspace_id: session.user.id
+          }
+        }
+      });
+
+      if (otpError) {
+        console.error('Error sending invitation:', otpError);
+        setError("Failed to send invitation");
+        setIsLoading(false);
+        return;
+      }
+
+      // Add to invitations list for UI
+      const newInvitation: Invitation = {
+        id: crypto.randomUUID(),
         email,
         role,
-        status: "pending",
-      },
-    ]);
-    setEmail("");
-    setError("");
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        workspace_id: session.user.id,
+        invited_by_user_id: session.user.id,
+        token: '',
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      setInvitations([...invitations, newInvitation]);
+      setEmail("");
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error:', err);
+      setError("An unexpected error occurred");
+      setIsLoading(false);
+    }
   };
-  const handleBulkInvite = () => {
+
+  const handleBulkInvite = async () => {
+    if (!session?.user) return;
+
     const emails = bulkEmails
       .split("\n")
       .map((e) => e.trim())
       .filter((e) => e && validateEmail(e));
-    const newInvitations = emails.map((email) => ({
-      email,
-      role,
-      status: "pending" as const,
-    }));
-    setInvitations([...invitations, ...newInvitations]);
-    setBulkEmails("");
-    setShowBulkInput(false);
+
+    if (emails.length === 0) {
+      setError("No valid email addresses found");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const invitePromises = emails.map(email => 
+        supabase.auth.signInWithOtp({
+          email,
+          options: {
+            data: {
+              role,
+              workspace_id: session.user.id
+            }
+          }
+        })
+      );
+
+      const results = await Promise.allSettled(invitePromises);
+      
+      // Check for any failed invitations
+      const failedEmails = results
+        .map((result, index) => result.status === 'rejected' ? emails[index] : null)
+        .filter((email): email is string => email !== null);
+
+      if (failedEmails.length > 0) {
+        setError(`Failed to send invitations to: ${failedEmails.join(', ')}`);
+        setIsLoading(false);
+        return;
+      }
+
+      const newInvitations: Invitation[] = emails.map(email => ({
+        id: crypto.randomUUID(),
+        email,
+        role,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        workspace_id: session.user.id,
+        invited_by_user_id: session.user.id,
+        token: '',
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      }));
+
+      setInvitations([...invitations, ...newInvitations]);
+      setBulkEmails("");
+      setShowBulkInput(false);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error:', err);
+      setError("An unexpected error occurred");
+      setIsLoading(false);
+    }
   };
-  const removeInvitation = (email: string) => {
-    setInvitations(invitations.filter((inv) => inv.email !== email));
+
+  const removeInvitation = async (id: string) => {
+    if (!session?.user) return;
+
+    const { error } = await supabase
+      .from('invitations')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error removing invitation:', error);
+      return;
+    }
+
+    setInvitations(invitations.filter((inv) => inv.id !== id));
   };
-  const sendInvitations = () => {
-    // In a real app, this would make an API call
-    setInvitations(
-      invitations.map((inv) => ({
-        ...inv,
-        status: "sent",
-      })),
-    );
-  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow">
@@ -103,6 +218,7 @@ export function InviteUsers() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                     placeholder="email@example.com"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -112,8 +228,9 @@ export function InviteUsers() {
                 </label>
                 <select
                   value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  onChange={(e) => setRole(e.target.value as Invitation['role'])}
                   className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  disabled={isLoading}
                 >
                   {roles.map((role) => (
                     <option key={role.id} value={role.id}>
@@ -134,15 +251,17 @@ export function InviteUsers() {
                 type="button"
                 onClick={() => setShowBulkInput(!showBulkInput)}
                 className="text-sm text-blue-600 hover:text-blue-500 flex items-center"
+                disabled={isLoading}
               >
                 <Plus size={16} className="mr-1" />
                 Bulk Invite
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
               >
-                Add Invitation
+                {isLoading ? "Adding..." : "Add Invitation"}
               </button>
             </div>
           </form>
@@ -158,12 +277,14 @@ export function InviteUsers() {
                 rows={4}
                 className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                 placeholder="john@example.com&#10;jane@example.com&#10;steve@example.com"
+                disabled={isLoading}
               />
               <button
                 onClick={handleBulkInvite}
-                className="mt-2 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50"
+                className="mt-2 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
               >
-                Add Bulk Invitations
+                {isLoading ? "Adding..." : "Add Bulk Invitations"}
               </button>
             </div>
           )}
@@ -181,7 +302,7 @@ export function InviteUsers() {
             <div className="space-y-2">
               {invitations.map((inv) => (
                 <div
-                  key={inv.email}
+                  key={inv.id}
                   className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md"
                 >
                   <div className="flex items-center space-x-3">
@@ -196,15 +317,16 @@ export function InviteUsers() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {inv.status === "sent" && (
-                      <span className="flex items-center text-green-600 text-sm">
-                        <CheckCircle size={16} className="mr-1" />
-                        Sent
+                    {inv.status === "pending" && (
+                      <span className="flex items-center text-yellow-600 text-sm">
+                        <AlertCircle size={16} className="mr-1" />
+                        Pending
                       </span>
                     )}
                     <button
-                      onClick={() => removeInvitation(inv.email)}
+                      onClick={() => removeInvitation(inv.id)}
                       className="text-gray-400 hover:text-gray-500"
+                      disabled={isLoading}
                     >
                       <X size={16} />
                     </button>
@@ -212,17 +334,6 @@ export function InviteUsers() {
                 </div>
               ))}
             </div>
-            {invitations.some((inv) => inv.status === "pending") && (
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={sendInvitations}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                >
-                  Send {invitations.length} Invitation
-                  {invitations.length !== 1 ? "s" : ""}
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}

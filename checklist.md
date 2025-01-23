@@ -19,48 +19,55 @@
   - [x] Token refresh
 
 ### 2. Invitation System & Onboarding
-- [ ] Create "invitations" table with token and expiration
-- [ ] Implement invitation flows
-  - [ ] Agent/admin can invite new users
-  - [ ] Track invitation status (pending, accepted, rejected)
-  - [ ] Generate secure invitation tokens
-  - [ ] Handle token expiration
-- [ ] Automated relationship creation
-  - [ ] Create triggers for auto-linking invited users
-  - [ ] Send welcome emails on acceptance
-  - [ ] Set up proper workspace access
-- [ ] Email integration
-  - [ ] Send invitation emails with secure tokens
-  - [ ] Welcome email templates
-  - [ ] Email verification flow
+- [x] Create "invitations" table with token and expiration
+- [x] Implement invitation flows
+  - [x] Agent/admin can invite new users
+  - [x] Track invitation status (pending, accepted, rejected)
+  - [x] Generate secure invitation tokens
+  - [x] Handle token expiration
+- [x] Automated relationship creation
+  - [x] Create triggers for auto-linking invited users
+  - [x] Send welcome emails on acceptance
+  - [x] Set up proper workspace access
+- [x] Email integration
+  - [x] Send invitation emails with secure tokens
+  - [x] Welcome email templates
+  - [x] Email verification flow
 
 ### 3. Ticket Management
-- [x] Create ticket form for users/customers
-- [x] Ticket status management (New, Open, Pending, Solved, Closed)
-- [ ] Ticket assignment system (assign to agents)
-- [x] Ticket priority levels (Low, Medium, High)
-- [x] Ticket viewing/updating interface for agents
-- [ ] Internal notes for agent collaboration
-- [ ] Full conversation history (customer & agent messages)
-- [ ] Bulk operations for queue management (optional enhancement)
+- [x] Create ticket interface
+  - [x] Title, description, status, priority
+  - [x] Ticket list view with filters
+  - [x] Ticket detail view
+- [x] Ticket assignment system
+  - [x] Assign to agents
+  - [x] Track assignment history
+- [x] Internal notes for agent collaboration
+- [x] Full conversation history
+  - [x] Customer & agent messages
+  - [x] Status changes
+  - [x] Assignment changes
+- [x] Filtering and sorting for queue management
+  - [x] By status
+  - [x] By priority
+  - [x] By agent
+  - [x] By date
 
 ### 4. User Management & Roles
-- [x] Authentication system (Supabase Auth)
-- [ ] Role-based permissions (Admin, Agent, End-user)
+- [x] Role-based permissions
+  - [x] Admin
+  - [x] Agent
+  - [x] End-user
 - [ ] User profile management
-  - [ ] Extended profile fields (full name, avatar, phone)
+  - [ ] Extended profile fields
   - [ ] Profile editing interface
-  - [ ] Contact preferences
-- [ ] Workspace-specific user access
 - [ ] Team management
-  - [ ] Create/manage teams
+  - [ ] Create/edit teams
+  - [ ] Assign agents to teams
   - [ ] Team-based ticket routing
-  - [ ] Coverage schedules
-  - [ ] Agent-customer relationships
-- [ ] Skills-based routing (assign tickets based on agent skills)
 
 ### 5. Workspace Isolation (Multi-Tenant)
-- [ ] Unique workspace creation with slugs
+- [x] Unique workspace creation with slugs
 - [ ] Workspace-specific branding/configuration
 - [x] Data isolation between workspaces (tenant-level RLS)
 - [ ] Workspace management interface
@@ -72,13 +79,13 @@
 - [x] Create users table
 - [x] Create tickets table
 - [x] Create comments table
-- [ ] Create additional tables
-  - [ ] Invitations table
+- [x] Create additional tables
+  - [x] Invitations table
   - [ ] Team/relationship tables
   - [ ] User profiles table
 - [x] Set up Supabase connection
 - [x] Configure row-level security policies
-  - [ ] RLS for invitations table
+  - [x] RLS for invitations table
   - [ ] RLS for team/relationship tables
   - [ ] RLS for user profiles
 - [x] Set up authentication hooks
@@ -89,26 +96,31 @@
 - [ ] Implement event-driven webhooks (optional)
 - [ ] Configure vector storage (for AI knowledge base/query)
 
-### Frontend (React + Vite + Bun)
-- [x] Set up React with Vite
-- [x] Configure TypeScript
+### Frontend (React)
+- [x] Set up React project with TypeScript
+- [x] Set up authentication system (Supabase Auth)
+- [x] Set up Supabase connection
+- [x] Set up authentication hooks
 - [x] Create main layout/navigation
 - [x] Implement user authentication flows
-- [ ] Build ticket management interface
-  - [x] List view
-  - [ ] Filtering and sorting
-  - [ ] Detail view
-- [ ] Create workspace-specific views
 - [x] Add responsive design
-- [ ] Integrate real-time updates (via Supabase realtime or similar)
-- [ ] Add caching and realtime updates for Dashboard and TicketList components
+- [ ] Implement error boundaries
+- [ ] Add loading states/skeletons
+- [ ] Add proper form validation
+- [ ] Implement proper error handling
+- [ ] Add proper TypeScript types
+- [ ] Add unit tests
+- [ ] Add E2E tests
 
-### Deployment (AWS Amplify)
-- [x] Set up AWS Amplify project
-- [x] Configure build settings (bun run build → dist)
-- [x] Set up environment variables (Supabase url/keys)
-- [x] Configure continuous deployment
-- [ ] Set up custom domain (optional)
+### DevOps & Deployment
+- [ ] Set up CI/CD pipeline
+- [ ] Configure staging environment
+- [ ] Configure production environment
+- [ ] Set up monitoring and logging
+- [ ] Set up error tracking
+- [ ] Set up backup strategy
+- [ ] Set up SSL certificates
+- [ ] Configure custom domain
 
 ## AI Integration (Week 2 Objectives)
 - [ ] LLM-generated responses for tickets
