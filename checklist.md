@@ -112,11 +112,11 @@
 - [%%%] Add loading states/skeletons # Perceived performance
 - [%%%] Add proper form validation # Ticket/user forms
 - [%%%] Implement proper error handling # Network errors
-- [%%%] Add proper TypeScript types # Eliminate 'any' types
-- [ ] Add unit tests
-- [ ] Add E2E tests
+- [x] Add proper TypeScript types # Eliminate 'any' types
+- [%%%] Add unit tests
+- [%%%] Add E2E tests
 
-### DevOps & Deployment (%%% DEPLOYABLE)
+### DevOps & Deployment
 - [x] Set up CI/CD pipeline
 - [x] Set up monitoring and logging
 - [x] Set up error tracking
@@ -134,10 +134,10 @@
 - [%%%] Video Walkthrough
   - [%%%] End-to-end ticket lifecycle showcase
   - [ ] AI agent involvement demo (response, routing, escalation)
-- [%%%] Git Repository
-  - [%%%] High-quality, production-grade code
+- [x] Git Repository
+  - [x] High-quality, production-grade code
   - [%%%] Automated testing (unit, integration, edge cases)
-  - [%%%] CI/CD pipeline
+  - [x] CI/CD pipeline
   - [ ] Passing autograder checks for style & formatting 
 
 # AI Integraton (Defer to Week 2)
