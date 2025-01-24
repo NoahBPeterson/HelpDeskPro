@@ -52,11 +52,12 @@ export function CreateTicketForm({ onSuccess }: { onSuccess?: () => void }) {
     setLoading(true)
 
     try {
+      if (!session) throw new Error('No session found')
       // First get the user's workspace_id
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('workspace_id')
-        .eq('id', session?.user.id)
+        .eq('id', session.user.id)
         .single()
 
       if (userError) throw userError
