@@ -8,3 +8,6 @@
   2. Select your project
   3. Copy the generated types
   4. Paste into `src/lib/database.types.ts` 
+
+We are using the remote Supabase database; please don't use local.
+
