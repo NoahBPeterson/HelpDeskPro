@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { Team, TeamMember } from '../types/teams';
@@ -18,6 +18,8 @@ export function TeamManagement() {
     const [teamCategories, setTeamCategories] = useState<{ [key: string]: string[] }>({});
     const [showCategoryDropdown, setShowCategoryDropdown] = useState<{ [key: string]: boolean }>({});
     const [dropdownPosition, setDropdownPosition] = useState<{ [key: string]: { top: number; right: number } }>({});
+    const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+    const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
     const categories = [
         { id: "technical", label: "Technical Issue" },
@@ -79,7 +81,7 @@ export function TeamManagement() {
                     .in('role', ['admin', 'agent']);
 
                 if (agentsError) throw agentsError;
-                setAvailableAgents(agentsData);
+                setAvailableAgents(agentsData as User[]);
 
             } catch (err) {
                 console.error('Error fetching teams:', err);
@@ -92,6 +94,38 @@ export function TeamManagement() {
         fetchTeams();
     }, [session?.user?.id]);
 
+    // Add click outside handler
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            const target = event.target as Node;
+            
+            // Find which dropdown is open
+            const openTeamId = Object.entries(showCategoryDropdown)
+                .find(([, isOpen]) => isOpen)?.[0];
+            
+            if (!openTeamId) return; // No dropdowns are open
+
+            const activeDropdown = dropdownRefs.current[openTeamId];
+            const activeButton = buttonRefs.current[openTeamId];
+
+            // If we click inside the active dropdown or its button, do nothing
+            if (activeDropdown?.contains(target) || activeButton?.contains(target)) {
+                return;
+            }
+
+            // Otherwise, close the dropdown
+            setShowCategoryDropdown((prev: { [key: string]: boolean }) => ({
+                ...prev,
+                [openTeamId]: false
+            }));
+        }
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [showCategoryDropdown]); // Need this dependency to know which dropdown is open
+
     async function handleCreateTeam(e: React.FormEvent) {
         e.preventDefault();
         if (!session?.user?.id || !newTeamName.trim()) return;
@@ -103,12 +137,14 @@ export function TeamManagement() {
                 .eq('id', session.user.id)
                 .single();
 
+            if (!userData?.workspace_id) throw new Error('No workspace found');
+
             const { data: team, error } = await supabase
                 .from('teams')
                 .insert({
                     name: newTeamName.trim(),
                     description: newTeamDescription.trim(),
-                    workspace_id: userData?.workspace_id
+                    workspace_id: userData.workspace_id
                 })
                 .select()
                 .single();
@@ -227,16 +263,30 @@ export function TeamManagement() {
         const rect = buttonElement.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
-        const dropdownHeight = 350; // Approximate height of dropdown
+        const shouldShowBelow = spaceBelow >= 200 || spaceBelow > spaceAbove;
 
-        setDropdownPosition({
-            ...dropdownPosition,
+        setDropdownPosition(prev => ({
+            ...prev,
             [teamId]: {
-                top: spaceBelow >= dropdownHeight ? rect.bottom + window.scrollY : rect.top - dropdownHeight + window.scrollY,
+                top: shouldShowBelow ? rect.bottom + window.scrollY : rect.top + window.scrollY - 256,
                 right: window.innerWidth - rect.right
             }
-        });
+        }));
     };
+
+    // Update dropdown position on scroll
+    useEffect(() => {
+        function handleScroll() {
+            Object.entries(showCategoryDropdown).forEach(([teamId, isOpen]) => {
+                if (isOpen && buttonRefs.current[teamId]) {
+                    updateDropdownPosition(teamId, buttonRefs.current[teamId]!);
+                }
+            });
+        }
+
+        window.addEventListener('scroll', handleScroll, true);
+        return () => window.removeEventListener('scroll', handleScroll, true);
+    }, [showCategoryDropdown]);
 
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div className="text-red-500">{error}</div>;
@@ -355,12 +405,14 @@ export function TeamManagement() {
                                 </div>
                                 <button
                                     onClick={(e) => {
+                                        e.stopPropagation(); // Stop event from bubbling
                                         updateDropdownPosition(team.id, e.currentTarget);
-                                        setShowCategoryDropdown(prev => ({
+                                        setShowCategoryDropdown((prev: { [key: string]: boolean }) => ({
                                             ...prev,
                                             [team.id]: !prev[team.id]
                                         }));
                                     }}
+                                    ref={el => buttonRefs.current[team.id] = el}
                                     className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
                                     <Tags size={16} />
@@ -393,11 +445,13 @@ export function TeamManagement() {
 
                             {showCategoryDropdown[team.id] && (
                                 <div 
+                                    ref={el => dropdownRefs.current[team.id] = el}
                                     className="fixed z-50 w-72"
                                     style={{
                                         top: dropdownPosition[team.id]?.top ?? 0,
                                         right: dropdownPosition[team.id]?.right ?? 0
                                     }}
+                                    onClick={e => e.stopPropagation()} // Stop clicks inside dropdown from bubbling
                                 >
                                     <div className="bg-white rounded-lg shadow-lg border border-gray-200">
                                         <div className="p-3 border-b border-gray-200">

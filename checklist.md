@@ -1,12 +1,16 @@
 # Zendesk Clone (AutoCRM) Project Checklist
+## Legend
+- (%%%) = Must complete by Jan 24 (App Complete deadline)
+- [x] = Completed
+- [ ] = Todo
 
 ## Core Features
 
 ### 1. Authentication & Authorization
 - [x] Set up Supabase Auth
   - [x] Email/password authentication
-  - [ ] OAuth providers (Google, GitHub)
-  - [ ] Password reset flow
+  - [%%%] OAuth providers (Google, GitHub) # Required for user convenience
+  - [%%%] Password reset flow # Critical for production readiness
   - [x] Email verification
 - [x] Authorization Rules
   - [x] Row Level Security (RLS) policies
@@ -34,13 +38,13 @@
   - [x] Welcome email templates
   - [x] Email verification flow
 
-### 3. Ticket Management
+### 3. Ticket Management (%%% CORE MVP)
 - [x] Create ticket interface
   - [x] Title, description, status, priority
-  - [x] Ticket list view with filters
+  - [%%%] Ticket list view with filters # Ensure all filters work
   - [x] Ticket detail view
 - [x] Ticket assignment system
-  - [x] Assign to agents
+  - [%%%] Assign to agents # Must have working assignment
   - [x] Track assignment history
 - [x] Internal notes for agent collaboration
 - [x] Full conversation history
@@ -53,28 +57,28 @@
   - [x] By agent
   - [x] By date
 
-### 4. User Management & Roles
+### 4. User Management & Roles (%%% CRITICAL)
 - [x] Role-based permissions
   - [x] Admin
   - [x] Agent
   - [x] End-user
-- [ ] User profile management
-  - [ ] Extended profile fields
-  - [ ] Profile editing interface
-- [ ] Team management
+- [%%%] User profile management
+  - [%%%] Extended profile fields # Minimum: name/avatar
+  - [%%%] Profile editing interface
+- [%%%] Team management
   - [x] Create/edit teams
-  - [x] Assign agents to teams
+  - [%%%] Assign agents to teams # Required for ticket routing
   - [x] Team-based ticket routing
 
-### 5. Workspace Isolation (Multi-Tenant)
+### 5. Workspace Isolation (%%% MULTI-TENANCY)
 - [x] Unique workspace creation with slugs
-- [ ] Workspace-specific branding/configuration
-- [x] Data isolation between workspaces (tenant-level RLS)
-- [ ] Workspace management interface
+- [%%%] Workspace-specific branding/configuration # Minimum: logo/colors
+- [x] Data isolation between workspaces
+- [%%%] Workspace management interface # Basic settings UI
 
 ## Technical Implementation
 
-### Database & Backend (Supabase)
+### Database & Backend (%%% PRODUCTION-READY)
 - [x] Create workspaces table
 - [x] Create users table
 - [x] Create tickets table
@@ -84,20 +88,19 @@
   - [x] Team/relationship tables
   - [ ] User profiles table
 - [x] Set up Supabase connection
-- [x] Configure row-level security policies
-  - [x] RLS for invitations table
-  - [x] RLS for comments table
-  - [x] RLS for team/relationship tables
-  - [ ] RLS for user profiles
+- [%%%] Configure row-level security policies
+  - [%%%] RLS for invitations table
+  - [%%%] RLS for comments table
+  - [%%%] RLS for team/relationship tables
+  - [%%%] RLS for user profiles # Critical for data isolation
 - [x] Set up authentication hooks
-- [ ] Database optimization
-  - [ ] Add proper indexes (foreign keys, tokens)
-  - [ ] Query performance tuning
-  - [ ] Connection pooling setup
+- [%%%] Database optimization
+  - [%%%] Add proper indexes # Foreign keys/tokens
+  - [%%%] Query performance tuning # Fix slow queries
 - [ ] Implement event-driven webhooks (optional)
 - [ ] Configure vector storage (for AI knowledge base/query)
 
-### Frontend (React)
+### Frontend (%%% SHIPPABLE UI)
 - [x] Set up React project with TypeScript
 - [x] Set up authentication system (Supabase Auth)
 - [x] Set up Supabase connection
@@ -105,21 +108,39 @@
 - [x] Create main layout/navigation
 - [x] Implement user authentication flows
 - [x] Add responsive design
-- [ ] Implement error boundaries
-- [ ] Add loading states/skeletons
-- [ ] Add proper form validation
-- [ ] Implement proper error handling
-- [ ] Add proper TypeScript types
+- [%%%] Implement error boundaries # Prevent full crashes
+- [%%%] Add loading states/skeletons # Perceived performance
+- [%%%] Add proper form validation # Ticket/user forms
+- [%%%] Implement proper error handling # Network errors
+- [%%%] Add proper TypeScript types # Eliminate 'any' types
 - [ ] Add unit tests
 - [ ] Add E2E tests
 
-### DevOps & Deployment
+### DevOps & Deployment (%%% DEPLOYABLE)
 - [x] Set up CI/CD pipeline
 - [x] Set up monitoring and logging
 - [x] Set up error tracking
-- [x] Set up SSL certificates
+- [x] Set up SSL certificates # Production requirement
+- [x] Final production deployment # On Amplify
 
-# AI Integraton (Week 2 Objectives)
+## Test2Pass (%%% SUBMISSION REQUIREMENTS)
+- [%%%] Brainlift Documentation
+  - [%%%] Purpose
+  - [%%%] Experts
+  - [%%%] Spiky POVs
+  - [ ] Knowledge Tree
+  - [ ] External Resources (≥5 credible sources)
+  - [ ] Impact on project/LLM behavior
+- [%%%] Video Walkthrough
+  - [%%%] End-to-end ticket lifecycle showcase
+  - [ ] AI agent involvement demo (response, routing, escalation)
+- [%%%] Git Repository
+  - [%%%] High-quality, production-grade code
+  - [%%%] Automated testing (unit, integration, edge cases)
+  - [%%%] CI/CD pipeline
+  - [ ] Passing autograder checks for style & formatting 
+
+# AI Integraton (Defer to Week 2)
 
 ## AI Ideas
 - [ ] LLM-generated responses for tickets
@@ -148,21 +169,3 @@
 - [ ] Additional languages & localization
 - [ ] Audio/visual attachment support for tickets
 - [ ] Multi-modal support (e.g., phone transcripts, voice to text)
-
-## Test2Pass (T2P) Requirements
-- [ ] Brainlift Documentation
-  - [ ] Purpose
-  - [ ] Experts
-  - [ ] Spiky POVs
-  - [ ] Knowledge Tree
-  - [ ] External Resources (≥5 credible sources)
-  - [ ] Impact on project/LLM behavior
-- [ ] Video Walkthrough (3-5 minutes)
-  - [ ] Public link for demonstration
-  - [ ] End-to-end ticket lifecycle showcase
-  - [ ] AI agent involvement demo (response, routing, escalation)
-- [ ] Git Repository
-  - [ ] High-quality, production-grade code
-  - [ ] Automated testing (unit, integration, edge cases)
-  - [ ] CI/CD pipeline with automated build/test/deploy
-  - [ ] Passing autograder checks for style & formatting 

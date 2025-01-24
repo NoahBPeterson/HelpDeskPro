@@ -3,14 +3,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import { Flag, Filter, User, Users } from "lucide-react";
-import { Ticket } from "../types/tickets";
+import { Ticket, TicketWithCreator } from "../types/tickets";
 import { Team } from '../types/teams';
-
-type TicketWithCreator = Ticket & {
-    creator: {
-        email: string;
-    };
-};
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-US', {
@@ -130,7 +124,7 @@ export function TicketList() {
           .from('tickets')
           .select(`
             *,
-            creator:created_by_user_id(email)
+            creator:users!tickets_created_by_user_id_fkey(email)
           `)
           .eq('workspace_id', userData.workspace_id);
 

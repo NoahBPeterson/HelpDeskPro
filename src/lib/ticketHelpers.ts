@@ -9,13 +9,17 @@ type IconResult = {
 export function getStatusIcon(status: Ticket['status']): IconResult {
     switch (status) {
         case 'new':
-        case 'open':
             return { icon: AlertCircle, color: 'text-blue-500' };
-        case 'pending':
+        case 'open':
             return { icon: Clock, color: 'text-yellow-500' };
+        case 'pending':
+            return { icon: Clock, color: 'text-orange-500' };
         case 'solved':
-        case 'closed':
             return { icon: CheckCircle, color: 'text-green-500' };
+        case 'closed':
+            return { icon: CheckCircle, color: 'text-gray-500' };
+        default:
+            return { icon: AlertCircle, color: 'text-gray-500' };
     }
 }
 
@@ -44,6 +48,8 @@ export function getPriorityIcon(priority: Ticket['priority']): IconResult {
             return { icon: Clock, color: 'text-yellow-500' };
         case 'low':
             return { icon: CheckCircle, color: 'text-green-500' };
+        default:
+            return { icon: Clock, color: 'text-gray-500' };
     }
 }
 

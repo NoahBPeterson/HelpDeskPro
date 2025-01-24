@@ -45,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
 
     fetchUserRole();
-  }, [session?.user?.id]);
+  }, [session]);
 
   // Debug log for role changes
   useEffect(() => {

@@ -13,7 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
-import { Ticket, Comment } from "../types/tickets";
+import { Ticket, Comment, TicketWithCreator } from "../types/tickets";
 import { Team } from "../types/teams";
 
 function formatDate(date: string) {
@@ -36,7 +36,7 @@ export function ViewTicket() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { session } = useAuth();
-    const [ticket, setTicket] = useState<Ticket & { creator?: { email: string } } | null>(null);
+    const [ticket, setTicket] = useState<TicketWithCreator>();
     const [comments, setComments] = useState<Comment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -63,13 +63,17 @@ export function ViewTicket() {
                 // Fetch ticket
                 const { data: ticketData, error: ticketError } = await supabase
                     .from('tickets')
-                    .select('*, creator:created_by_user_id(email)')
+                    .select('*, creator:users!tickets_created_by_user_id_fkey(email)')
                     .eq('id', id)
                     .eq('workspace_id', userData.workspace_id)
                     .single();
 
                 if (ticketError) throw ticketError;
-                setTicket(ticketData);
+                const ticketWithCreator: TicketWithCreator = {
+                    ...ticketData,
+                    creator: { email: ticketData.creator.email }
+                };
+                setTicket(ticketWithCreator);
 
                 // Fetch agents from the same workspace
                 const { data: agentsData, error: agentsError } = await supabase
@@ -190,7 +194,7 @@ export function ViewTicket() {
 
             if (commentsError) throw commentsError;
             setComments(commentsData);
-            setTicket(prev => prev ? { ...prev, status: newStatus } : null);
+            setTicket(prev => prev ? { ...prev, status: newStatus, creator: prev.creator } : undefined);
         } catch (err) {
             console.error('Error updating ticket status:', err);
             alert('Failed to update ticket status');
@@ -226,7 +230,7 @@ export function ViewTicket() {
 
             if (commentsError) throw commentsError;
             setComments(commentsData);
-            setTicket(prev => prev ? { ...prev, priority: newPriority } : null);
+            setTicket(prev => prev ? { ...prev, priority: newPriority, creator: prev.creator } : undefined);
         } catch (err) {
             console.error('Error updating ticket priority:', err);
             alert('Failed to update ticket priority');
@@ -239,7 +243,7 @@ export function ViewTicket() {
         try {
             const { error } = await supabase
                 .from('tickets')
-                .update({ assigned_to_user_id: agentId || null })
+                .update({ assigned_to_user_id: agentId })
                 .eq('id', ticket.id);
 
             if (error) throw error;
@@ -262,7 +266,8 @@ export function ViewTicket() {
 
             if (commentsError) throw commentsError;
             setComments(commentsData);
-            setTicket(prev => prev ? { ...prev, assigned_to_user_id: agentId || null } : null);
+            setTicket(prev => prev ? { ...prev, assigned_to_user_id: agentId, creator: prev.creator } : undefined);
+
         } catch (err) {
             console.error('Error updating ticket assignee:', err);
             alert('Failed to update ticket assignee');
@@ -275,7 +280,7 @@ export function ViewTicket() {
         try {
             const { error } = await supabase
                 .from('tickets')
-                .update({ team_id: teamId || null })
+                .update({ team_id: teamId || undefined })
                 .eq('id', ticket.id);
 
             if (error) throw error;
@@ -301,7 +306,7 @@ export function ViewTicket() {
 
             if (commentsError) throw commentsError;
             setComments(commentsData);
-            setTicket(prev => prev ? { ...prev, team_id: teamId || null } : null);
+            setTicket(prev => prev ? { ...prev, team_id: teamId, creator: prev.creator } : undefined);
         } catch (err) {
             console.error('Error updating ticket team:', err);
             alert('Failed to update ticket team');

@@ -123,7 +123,8 @@ export function InviteUsers() {
           email,
           role,
           workspace_id: workspaceId,
-          invited_by_user_id: session.user.id
+          invited_by_user_id: session.user.id,
+          token: crypto.randomUUID()
         })
         .select()
         .single();
@@ -187,7 +188,8 @@ export function InviteUsers() {
             email,
             role,
             workspace_id: workspaceId,
-            invited_by_user_id: session.user.id
+            invited_by_user_id: session.user.id,
+            token: crypto.randomUUID()
           }))
         )
         .select();

@@ -9,8 +9,14 @@ type UserRow = Tables['users']['Row'];
 // Frontend types
 export type Ticket = TicketRow;
 
-export type Comment = Omit<CommentRow, 'author_id'> & {
-    created_by_user_id: string;
+export type TicketWithCreator = Ticket & {
+    creator: {
+        email: string;
+    };
+};
+
+
+export type Comment = CommentRow & {
     user: {
         email: string;
     };
