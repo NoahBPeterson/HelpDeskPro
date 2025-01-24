@@ -62,9 +62,9 @@
   - [ ] Extended profile fields
   - [ ] Profile editing interface
 - [ ] Team management
-  - [ ] Create/edit teams
-  - [ ] Assign agents to teams
-  - [ ] Team-based ticket routing
+  - [x] Create/edit teams
+  - [x] Assign agents to teams
+  - [x] Team-based ticket routing
 
 ### 5. Workspace Isolation (Multi-Tenant)
 - [x] Unique workspace creation with slugs
@@ -81,12 +81,13 @@
 - [x] Create comments table
 - [x] Create additional tables
   - [x] Invitations table
-  - [ ] Team/relationship tables
+  - [x] Team/relationship tables
   - [ ] User profiles table
 - [x] Set up Supabase connection
 - [x] Configure row-level security policies
   - [x] RLS for invitations table
-  - [ ] RLS for team/relationship tables
+  - [x] RLS for comments table
+  - [x] RLS for team/relationship tables
   - [ ] RLS for user profiles
 - [x] Set up authentication hooks
 - [ ] Database optimization
@@ -113,16 +114,14 @@
 - [ ] Add E2E tests
 
 ### DevOps & Deployment
-- [ ] Set up CI/CD pipeline
-- [ ] Configure staging environment
-- [ ] Configure production environment
-- [ ] Set up monitoring and logging
-- [ ] Set up error tracking
-- [ ] Set up backup strategy
-- [ ] Set up SSL certificates
-- [ ] Configure custom domain
+- [x] Set up CI/CD pipeline
+- [x] Set up monitoring and logging
+- [x] Set up error tracking
+- [x] Set up SSL certificates
 
-## AI Integration (Week 2 Objectives)
+# AI Integraton (Week 2 Objectives)
+
+## AI Ideas
 - [ ] LLM-generated responses for tickets
 - [ ] RAG-based knowledge retrieval (context for LLM)
 - [ ] AI-driven ticket routing (agentic approach)

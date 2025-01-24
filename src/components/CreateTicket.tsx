@@ -139,6 +139,7 @@ export function CreateTicket() {
           title: formData.title,
           description: formData.description,
           priority: formData.priority,
+          category: formData.category,
           workspace_id: userData.workspace_id,
           created_by_user_id: session.user.id,
           status: 'new'

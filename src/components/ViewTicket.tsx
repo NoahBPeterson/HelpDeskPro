@@ -8,11 +8,13 @@ import {
     User,
     Flag,
     MoreVertical,
+    Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import { Ticket, Comment } from "../types/tickets";
+import { Team } from "../types/teams";
 
 function formatDate(date: string) {
     return new Date(date).toLocaleString('en-US', {
@@ -42,6 +44,7 @@ export function ViewTicket() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [agents, setAgents] = useState<Agent[]>([]);
     const [isInternalNote, setIsInternalNote] = useState(false);
+    const [teams, setTeams] = useState<Team[]>([]);
 
     useEffect(() => {
         async function fetchTicket() {
@@ -77,6 +80,15 @@ export function ViewTicket() {
 
                 if (agentsError) throw agentsError;
                 setAgents(agentsData);
+
+                // Fetch teams from the same workspace
+                const { data: teamsData, error: teamsError } = await supabase
+                    .from('teams')
+                    .select('*')
+                    .eq('workspace_id', userData.workspace_id);
+
+                if (teamsError) throw teamsError;
+                setTeams(teamsData);
 
                 // Fetch comments
                 const { data: commentsData, error: commentsError } = await supabase
@@ -254,6 +266,45 @@ export function ViewTicket() {
         } catch (err) {
             console.error('Error updating ticket assignee:', err);
             alert('Failed to update ticket assignee');
+        }
+    }
+
+    async function handleTeamChange(teamId: string) {
+        if (!session?.user?.id || !ticket) return;
+
+        try {
+            const { error } = await supabase
+                .from('tickets')
+                .update({ team_id: teamId || null })
+                .eq('id', ticket.id);
+
+            if (error) throw error;
+
+            // Add a system comment about the team assignment
+            await supabase
+                .from('comments')
+                .insert({
+                    ticket_id: ticket.id,
+                    author_id: session.user.id,
+                    content: teamId 
+                        ? `Ticket assigned to team: ${teams.find(t => t.id === teamId)?.name}`
+                        : 'Ticket removed from team',
+                    type: 'system'
+                });
+
+            // Fetch updated comments
+            const { data: commentsData, error: commentsError } = await supabase
+                .from('comments')
+                .select('*, user:users(email)')
+                .eq('ticket_id', ticket.id)
+                .order('created_at', { ascending: true });
+
+            if (commentsError) throw commentsError;
+            setComments(commentsData);
+            setTicket(prev => prev ? { ...prev, team_id: teamId || null } : null);
+        } catch (err) {
+            console.error('Error updating ticket team:', err);
+            alert('Failed to update ticket team');
         }
     }
 
@@ -436,6 +487,28 @@ export function ViewTicket() {
                                     </select>
                                     <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                         <User size={16} className="text-gray-400" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Team
+                                </label>
+                                <div className="relative">
+                                    <select
+                                        value={ticket.team_id || ""}
+                                        onChange={(e) => handleTeamChange(e.target.value)}
+                                        className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="">👥 No Team</option>
+                                        {teams.map((team) => (
+                                            <option key={team.id} value={team.id}>
+                                                👥 {team.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                        <Users size={16} className="text-gray-400" />
                                     </div>
                                 </div>
                             </div>

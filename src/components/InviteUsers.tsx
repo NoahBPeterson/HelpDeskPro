@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Mail, AlertCircle } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from '../contexts/AuthContext'
 import { Database } from "../lib/database.types";
 
 type Invitation = Database['public']['Tables']['invitations']['Row'];
@@ -15,21 +15,60 @@ export function InviteUsers() {
   const [showBulkInput, setShowBulkInput] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
-  const roles = [
-    {
-      id: "end_user",
-      label: "End User",
-    },
-    {
-      id: "agent",
-      label: "Support Agent",
-    },
-    {
-      id: "admin",
-      label: "Administrator",
-    },
-  ];
+  // Fetch user's role and workspace ID from database
+  useEffect(() => {
+    async function fetchUserData() {
+      if (!session?.user?.id) return;
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('role, workspace_id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user data:', error);
+        return;
+      }
+
+      if (data) {
+        console.log('Setting user role to:', data.role);
+        console.log('Setting workspace ID to:', data.workspace_id);
+        setUserRole(data.role);
+        setWorkspaceId(data.workspace_id);
+      }
+    }
+
+    fetchUserData();
+  }, [session?.user?.id]);
+
+  // Get available roles based on current user's role
+  const roles = (() => {
+    switch (userRole) {
+      case 'admin':
+        return [
+          { id: "end_user", label: "End User" },
+          { id: "agent", label: "Support Agent" },
+          { id: "admin", label: "Administrator" }
+        ];
+      case 'agent':
+        return [
+          { id: "end_user", label: "End User" }
+        ];
+      default:
+        return [];
+    }
+  })();
+
+  // Set initial role to the first available role
+  useEffect(() => {
+    if (roles.length > 0) {
+      setRole(roles[0].id as Invitation['role']);
+    }
+  }, [roles]);
 
   // Fetch existing invitations
   useEffect(() => {
@@ -52,13 +91,21 @@ export function InviteUsers() {
     fetchInvitations();
   }, [session]);
 
+  if (!session?.user) {
+    return null;
+  }
+
+  if (roles.length === 0) {
+    return null;
+  }
+
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   };
 
   const handleSingleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session?.user) return;
+    if (!session?.user || !workspaceId) return;
 
     if (!validateEmail(email)) {
       setError("Please enter a valid email address");
@@ -69,38 +116,43 @@ export function InviteUsers() {
     setError("");
 
     try {
-      // Send magic link
+      // First create the invitation record
+      const { data: invitation, error: inviteError } = await supabase
+        .from('invitations')
+        .insert({
+          email,
+          role,
+          workspace_id: workspaceId,
+          invited_by_user_id: session.user.id
+        })
+        .select()
+        .single();
+
+      if (inviteError) {
+        console.error('Error creating invitation:', inviteError);
+        setError("Failed to create invitation");
+        setIsLoading(false);
+        return;
+      }
+
+      // Then send the magic link
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          data: {
-            role,
-            workspace_id: session.user.id
-          }
+          emailRedirectTo: `${window.location.origin}/accept-invite?token=${invitation.token}`
         }
       });
 
       if (otpError) {
         console.error('Error sending invitation:', otpError);
+        // Clean up the invitation record if email fails
+        await supabase.from('invitations').delete().eq('id', invitation.id);
         setError("Failed to send invitation");
         setIsLoading(false);
         return;
       }
 
-      // Add to invitations list for UI
-      const newInvitation: Invitation = {
-        id: crypto.randomUUID(),
-        email,
-        role,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        workspace_id: session.user.id,
-        invited_by_user_id: session.user.id,
-        token: '',
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      };
-
-      setInvitations([...invitations, newInvitation]);
+      setInvitations([...invitations, invitation]);
       setEmail("");
       setIsLoading(false);
     } catch (err) {
@@ -111,7 +163,7 @@ export function InviteUsers() {
   };
 
   const handleBulkInvite = async () => {
-    if (!session?.user) return;
+    if (!session?.user || !workspaceId) return;
 
     const emails = bulkEmails
       .split("\n")
@@ -127,44 +179,56 @@ export function InviteUsers() {
     setError("");
 
     try {
-      const invitePromises = emails.map(email => 
+      // First create all invitation records
+      const { data: invitations, error: inviteError } = await supabase
+        .from('invitations')
+        .insert(
+          emails.map(email => ({
+            email,
+            role,
+            workspace_id: workspaceId,
+            invited_by_user_id: session.user.id
+          }))
+        )
+        .select();
+
+      if (inviteError) {
+        console.error('Error creating invitations:', inviteError);
+        setError("Failed to create invitations");
+        setIsLoading(false);
+        return;
+      }
+
+      // Then send magic links
+      const emailPromises = invitations.map(invitation => 
         supabase.auth.signInWithOtp({
-          email,
+          email: invitation.email,
           options: {
-            data: {
-              role,
-              workspace_id: session.user.id
-            }
+            emailRedirectTo: `${window.location.origin}/accept-invite?token=${invitation.token}`
           }
         })
       );
 
-      const results = await Promise.allSettled(invitePromises);
+      const results = await Promise.allSettled(emailPromises);
       
-      // Check for any failed invitations
+      // Check for any failed emails
       const failedEmails = results
-        .map((result, index) => result.status === 'rejected' ? emails[index] : null)
+        .map((result, index) => result.status === 'rejected' ? invitations[index].email : null)
         .filter((email): email is string => email !== null);
 
       if (failedEmails.length > 0) {
+        // Clean up invitations for failed emails
+        await supabase
+          .from('invitations')
+          .delete()
+          .in('email', failedEmails);
+          
         setError(`Failed to send invitations to: ${failedEmails.join(', ')}`);
         setIsLoading(false);
         return;
       }
 
-      const newInvitations: Invitation[] = emails.map(email => ({
-        id: crypto.randomUUID(),
-        email,
-        role,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        workspace_id: session.user.id,
-        invited_by_user_id: session.user.id,
-        token: '',
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      }));
-
-      setInvitations([...invitations, ...newInvitations]);
+      setInvitations(prev => [...prev, ...invitations]);
       setBulkEmails("");
       setShowBulkInput(false);
       setIsLoading(false);

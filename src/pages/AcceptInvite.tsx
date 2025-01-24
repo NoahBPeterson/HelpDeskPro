@@ -70,10 +70,10 @@ export function AcceptInvite() {
         password,
         options: {
           data: {
-            workspace_id: invitation.workspace_id,
             role: invitation.role,
-          },
-        },
+            workspace_id: invitation.workspace_id
+          }
+        }
       });
 
       if (signUpError) {

@@ -1,11 +1,56 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Inbox, Plus, Settings, Search, Home, LogOut, UserPlus } from "lucide-react";
-import { signOut } from "../lib/supabase";
+import { Inbox, Plus, Settings, Search, Home, LogOut, UserPlus, Users } from "lucide-react";
+import { signOut, supabase } from "../lib/supabase";
+import { useAuth } from "../contexts/AuthContext";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { session } = useAuth();
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchUserRole() {
+      if (!session?.user?.id) {
+        console.log('No session or user ID');
+        return;
+      }
+
+      console.log('Session:', session);
+      console.log('User ID:', session.user.id);
+      
+      const query = supabase
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+        
+      console.log('Query:', query);
+      
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return;
+      }
+
+      console.log('Fetched user data:', data);
+      if (data) {
+        console.log('Setting user role to:', data.role);
+        setUserRole(data.role);
+      } else {
+        console.log('No user data found');
+      }
+    }
+
+    fetchUserRole();
+  }, [session?.user?.id]);
+
+  // Debug log for role changes
+  useEffect(() => {
+    console.log('Current user role:', userRole);
+  }, [userRole]);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -42,13 +87,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Plus size={20} />
             <span>New Ticket</span>
           </Link>
-          <Link
-            to="/invite"
-            className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/invite" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
-          >
-            <UserPlus size={20} />
-            <span>Invite Users</span>
-          </Link>
+          {userRole && userRole !== 'end_user' && (
+            <>
+              <Link
+                to="/invite"
+                className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/invite" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+              >
+                <UserPlus size={20} />
+                <span>Invite Users</span>
+              </Link>
+              <Link
+                to="/teams"
+                className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/teams" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+              >
+                <Users size={20} />
+                <span>Teams</span>
+              </Link>
+            </>
+          )}
         </nav>
         <div className="p-4 border-t border-gray-200 space-y-4 flex-shrink-0">
           <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 w-full">

@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
-import { Flag, Filter, User } from "lucide-react";
+import { Flag, Filter, User, Users } from "lucide-react";
 import { Ticket } from "../types/tickets";
+import { Team } from '../types/teams';
 
 type TicketWithCreator = Ticket & {
     creator: {
@@ -52,9 +53,12 @@ export function TicketList() {
   const [isLoading, setIsLoading] = useState(true);
   const [showStatusFilters, setShowStatusFilters] = useState(false);
   const [showAssigneeFilters, setShowAssigneeFilters] = useState(false);
+  const [showTeamFilters, setShowTeamFilters] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<Ticket['status'][]>(['new', 'open', 'pending']);
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>(['unassigned']);
   const [agents, setAgents] = useState<{ id: string; email: string }[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const { session } = useAuth();
 
   const statusOptions: { value: Ticket['status']; label: string; emoji: string }[] = [
@@ -65,9 +69,9 @@ export function TicketList() {
     { value: 'closed', label: 'Closed', emoji: '⚫' },
   ];
 
-  // First effect to fetch agents
+  // First effect to fetch agents and teams
   useEffect(() => {
-    async function fetchAgents() {
+    async function fetchAgentsAndTeams() {
       if (!session?.user?.id) return;
 
       try {
@@ -79,6 +83,7 @@ export function TicketList() {
 
         if (userError) throw userError;
 
+        // Fetch agents
         const { data: agentsData, error: agentsError } = await supabase
           .from('users')
           .select('id, email')
@@ -88,18 +93,28 @@ export function TicketList() {
         if (agentsError) throw agentsError;
         setAgents(agentsData || []);
         setSelectedAssignees(['unassigned', ...(agentsData || []).map(agent => agent.id)]);
+
+        // Fetch teams
+        const { data: teamsData, error: teamsError } = await supabase
+          .from('teams')
+          .select('*')
+          .eq('workspace_id', userData.workspace_id);
+
+        if (teamsError) throw teamsError;
+        setTeams(teamsData || []);
+        setSelectedTeams(['unassigned', ...(teamsData || []).map(team => team.id)]);
       } catch (error) {
-        console.error('Error fetching agents:', error);
+        console.error('Error fetching agents and teams:', error);
       }
     }
 
-    fetchAgents();
+    fetchAgentsAndTeams();
   }, [session?.user?.id]);
 
   // Second effect to fetch tickets
   useEffect(() => {
     async function fetchTickets() {
-      if (!session?.user?.id || selectedAssignees.length === 0) return;
+      if (!session?.user?.id || selectedAssignees.length === 0 || selectedTeams.length === 0) return;
 
       try {
         const { data: userData, error: userError } = await supabase
@@ -129,21 +144,30 @@ export function TicketList() {
         const assigneeIds = selectedAssignees.filter(id => id !== 'unassigned');
         
         if (hasUnassigned && assigneeIds.length > 0) {
-          // If both unassigned and specific assignees are selected
           query = query.or(`assigned_to_user_id.is.null,assigned_to_user_id.in.(${assigneeIds.join(',')})`);
         } else if (hasUnassigned) {
-          // If only unassigned is selected
           query = query.is('assigned_to_user_id', null);
         } else if (assigneeIds.length > 0) {
-          // If only specific assignees are selected
           query = query.in('assigned_to_user_id', assigneeIds);
+        }
+
+        // Add team filter
+        const hasUnassignedTeam = selectedTeams.includes('unassigned');
+        const teamIds = selectedTeams.filter(id => id !== 'unassigned');
+        
+        if (hasUnassignedTeam && teamIds.length > 0) {
+          query = query.or(`team_id.is.null,team_id.in.(${teamIds.join(',')})`);
+        } else if (hasUnassignedTeam) {
+          query = query.is('team_id', null);
+        } else if (teamIds.length > 0) {
+          query = query.in('team_id', teamIds);
         }
 
         const { data, error } = await query;
 
         if (error) throw error;
         console.log('Fetched tickets:', data);
-        console.log('Query filters:', { selectedStatuses, selectedAssignees });
+        console.log('Query filters:', { selectedStatuses, selectedAssignees, selectedTeams });
 
         // Sort tickets by priority (high -> medium -> low) and then by creation date
         const priorityOrder: Record<Ticket['priority'], number> = { high: 0, medium: 1, low: 2 };
@@ -165,7 +189,7 @@ export function TicketList() {
     }
 
     fetchTickets();
-  }, [session?.user?.id, selectedStatuses, selectedAssignees]);
+  }, [session?.user?.id, selectedStatuses, selectedAssignees, selectedTeams]);
 
   const handleStatusToggle = (status: Ticket['status']) => {
     setSelectedStatuses(prev => {
@@ -187,6 +211,16 @@ export function TicketList() {
     });
   };
 
+  const handleTeamToggle = (teamId: string) => {
+    setSelectedTeams(prev => {
+      if (prev.includes(teamId)) {
+        return prev.filter(id => id !== teamId);
+      } else {
+        return [...prev, teamId];
+      }
+    });
+  };
+
   if (isLoading) {
     return <div className="p-4 text-center">Loading tickets...</div>;
   }
@@ -203,6 +237,7 @@ export function TicketList() {
               onClick={() => {
                 setShowStatusFilters(!showStatusFilters);
                 setShowAssigneeFilters(false);
+                setShowTeamFilters(false);
               }}
               className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
@@ -241,6 +276,7 @@ export function TicketList() {
               onClick={() => {
                 setShowAssigneeFilters(!showAssigneeFilters);
                 setShowStatusFilters(false);
+                setShowTeamFilters(false);
               }}
               className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
@@ -277,6 +313,56 @@ export function TicketList() {
                       />
                       <span className="text-sm text-gray-700">
                         👤 {agent.email}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => {
+                setShowTeamFilters(!showTeamFilters);
+                setShowStatusFilters(false);
+                setShowAssigneeFilters(false);
+              }}
+              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <Users size={16} />
+              <span>Team</span>
+            </button>
+            {showTeamFilters && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="p-3 border-b border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-800">Team</h4>
+                </div>
+                <div className="p-2">
+                  <label className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedTeams.includes('unassigned')}
+                      onChange={() => handleTeamToggle('unassigned')}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      👥 No Team
+                    </span>
+                  </label>
+                  {teams.map((team) => (
+                    <label
+                      key={team.id}
+                      className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTeams.includes(team.id)}
+                        onChange={() => handleTeamToggle(team.id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">
+                        👥 {team.name}
                       </span>
                     </label>
                   ))}

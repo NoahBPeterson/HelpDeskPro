@@ -11,6 +11,7 @@ import { CreateTicket } from './components/CreateTicket'
 import { ViewTicket } from './components/ViewTicket'
 import { InviteUsers } from './components/InviteUsers'
 import { AcceptInvite } from "./pages/AcceptInvite"
+import { TeamManagement } from './components/TeamManagement'
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
                     <Route path="/ticket/:id" element={<ViewTicket />} />
                     <Route path="/invite" element={<InviteUsers />} />
                     <Route path="/accept-invite" element={<AcceptInvite />} />
+                    <Route path="/teams" element={<TeamManagement />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>
