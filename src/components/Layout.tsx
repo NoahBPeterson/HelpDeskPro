@@ -110,7 +110,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="flex-1 p-4 overflow-y-auto">
           <Link
-            to="/"
+            to="/dashboard"
             className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
           >
             <Home size={20} />
