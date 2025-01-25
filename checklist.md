@@ -43,6 +43,7 @@
   - [x] Title, description, status, priority
   - [%%%] Ticket list view with filters # Ensure all filters work
   - [x] Ticket detail view
+  - [x] Global search with prefix matching # Search tickets and comments
 - [x] Ticket assignment system
   - [%%%] Assign to agents # Must have working assignment
   - [x] Track assignment history
@@ -113,7 +114,7 @@
 - [%%%] Add proper form validation # Ticket/user forms
 - [%%%] Implement proper error handling # Network errors
 - [x] Add proper TypeScript types # Eliminate 'any' types
-- [%%%] Add unit tests
+- [x] Add unit tests
 - [%%%] Add E2E tests
 
 ### DevOps & Deployment

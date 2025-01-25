@@ -2,7 +2,7 @@ export type Json =
   | string
   | number
   | boolean
-  | null
+ 
   | { [key: string]: Json | undefined }
   | Json[]
 
@@ -15,6 +15,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          search_vector: unknown
           ticket_id: string
           type: string
         }
@@ -23,6 +24,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          search_vector?: unknown
           ticket_id?: string
           type?: string
         }
@@ -31,6 +33,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          search_vector?: unknown
           ticket_id?: string
           type?: string
         }
@@ -48,7 +51,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tickets"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       invitations: {
@@ -99,7 +102,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       team_categories: {
@@ -128,7 +131,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "teams"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       team_members: {
@@ -164,7 +167,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       teams: {
@@ -199,17 +202,19 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       tickets: {
         Row: {
           assigned_to_user_id: string
+          category: string
           created_at: string
           created_by_user_id: string
           description: string
           id: string
           priority: string
+          search_vector: unknown
           status: string
           team_id: string
           title: string
@@ -218,11 +223,13 @@ export type Database = {
         }
         Insert: {
           assigned_to_user_id?: string
+          category?: string
           created_at?: string
           created_by_user_id?: string
           description?: string
           id?: string
           priority?: string
+          search_vector?: unknown
           status?: string
           team_id?: string
           title: string
@@ -231,11 +238,13 @@ export type Database = {
         }
         Update: {
           assigned_to_user_id?: string
+          category?: string
           created_at?: string
           created_by_user_id?: string
           description?: string
           id?: string
           priority?: string
+          search_vector?: unknown
           status?: string
           team_id?: string
           title?: string
@@ -270,7 +279,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       users: {
@@ -305,7 +314,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
       workspaces: {
@@ -338,6 +347,30 @@ export type Database = {
       get_or_create_user: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      search_tickets: {
+        Args: {
+          search_query: string
+          p_workspace_id: string
+          requesting_user_id: string
+        }
+        Returns: {
+          ticket_id: string
+          title: string
+          description: string
+          status: string
+          priority: string
+          created_at: string
+          updated_at: string
+          created_by_user_id: string
+          assigned_to_user_id: string
+          team_id: string
+          workspace_id: string
+          rank: number
+          matched_comment_id: string
+          matched_comment_content: string
+          matched_comment_type: string
+        }[]
       }
     }
     Enums: {
