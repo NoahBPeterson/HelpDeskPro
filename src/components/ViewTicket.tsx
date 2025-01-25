@@ -345,7 +345,7 @@ export function ViewTicket() {
     return (
         <div className="space-y-4">
             <button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/tickets")}
                 className="flex items-center text-gray-600 hover:text-gray-800"
             >
                 <ArrowLeft size={20} className="mr-1" />
