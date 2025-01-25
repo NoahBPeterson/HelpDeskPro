@@ -1,10 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Database } from '../types/database';
-
-
-type SearchTicketResult = Database['functions']['search_tickets']['Returns'][number];
 
 interface SearchResult {
     ticket_id: string;
