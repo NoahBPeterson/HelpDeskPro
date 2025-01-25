@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
     Clock,
@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
+import { useUser } from "../contexts/AuthContext";
 import { Ticket, Comment, TicketWithCreator } from "../types/tickets";
 import { Team } from "../types/teams";
 
@@ -36,6 +37,7 @@ export function ViewTicket() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { session } = useAuth();
+    const { role } = useUser();
     const [ticket, setTicket] = useState<TicketWithCreator>();
     const [comments, setComments] = useState<Comment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -46,9 +48,16 @@ export function ViewTicket() {
     const [isInternalNote, setIsInternalNote] = useState(false);
     const [teams, setTeams] = useState<Team[]>([]);
 
+    const isAgent = useMemo(() => {
+        return role === 'agent' || role === 'admin';
+    }, [role]);
+
     useEffect(() => {
         async function fetchTicket() {
-            if (!session?.user?.id || !id) return;
+            if (!session?.user?.id || !id) {
+                console.log('Missing session or id:', { session: session?.user?.id, id });
+                return;
+            }
 
             try {
                 // Get user's workspace_id
@@ -58,7 +67,10 @@ export function ViewTicket() {
                     .eq('id', session.user.id)
                     .single();
 
-                if (userError) throw userError;
+                if (userError) {
+                    console.error('Error fetching workspace_id:', userError);
+                    throw userError;
+                }
 
                 // Fetch ticket
                 const { data: ticketData, error: ticketError } = await supabase
@@ -68,7 +80,10 @@ export function ViewTicket() {
                     .eq('workspace_id', userData.workspace_id)
                     .single();
 
-                if (ticketError) throw ticketError;
+                if (ticketError) {
+                    console.error('Error fetching ticket:', ticketError);
+                    throw ticketError;
+                }
                 const ticketWithCreator: TicketWithCreator = {
                     ...ticketData,
                     creator: { email: ticketData.creator.email }
@@ -82,7 +97,10 @@ export function ViewTicket() {
                     .eq('workspace_id', userData.workspace_id)
                     .neq('role', 'end_user');
 
-                if (agentsError) throw agentsError;
+                if (agentsError) {
+                    console.error('Error fetching agents:', agentsError);
+                    throw agentsError;
+                }
                 setAgents(agentsData);
 
                 // Fetch teams from the same workspace
@@ -91,7 +109,10 @@ export function ViewTicket() {
                     .select('*')
                     .eq('workspace_id', userData.workspace_id);
 
-                if (teamsError) throw teamsError;
+                if (teamsError) {
+                    console.error('Error fetching teams:', teamsError);
+                    throw teamsError;
+                }
                 setTeams(teamsData);
 
                 // Fetch comments
@@ -101,10 +122,13 @@ export function ViewTicket() {
                     .eq('ticket_id', id)
                     .order('created_at', { ascending: true });
 
-                if (commentsError) throw commentsError;
+                if (commentsError) {
+                    console.error('Error fetching comments:', commentsError);
+                    throw commentsError;
+                }
                 setComments(commentsData);
             } catch (err) {
-                console.error('Error fetching ticket:', err);
+                console.error('Error in fetchTicket:', err);
                 setError('Failed to load ticket details');
             } finally {
                 setIsLoading(false);
@@ -112,9 +136,9 @@ export function ViewTicket() {
         }
 
         fetchTicket();
-    }, [id, session?.user?.id]);
+    }, [session?.user?.id, id]);
 
-    const getStatusIcon = (status: string) => {
+    const getStatusIcon = useCallback((status: string) => {
         switch (status) {
             case 'new':
             case 'open':
@@ -127,9 +151,9 @@ export function ViewTicket() {
             default:
                 return null;
         }
-    };
+    }, []);
 
-    async function handleSubmitComment(e: React.FormEvent) {
+    const handleSubmitComment = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         if (!session?.user?.id || !ticket || !newComment.trim()) return;
 
@@ -162,10 +186,10 @@ export function ViewTicket() {
         } finally {
             setIsSubmitting(false);
         }
-    }
+    }, [session?.user?.id, ticket?.id, newComment, isInternalNote, supabase]);
 
-    async function handleStatusChange(newStatus: Ticket['status']) {
-        if (!session?.user?.id || !ticket) return;
+    const handleStatusChange = useCallback(async (newStatus: Ticket['status']) => {
+        if (!session?.user?.id || !ticket || !isAgent) return;
 
         try {
             const { error } = await supabase
@@ -175,7 +199,6 @@ export function ViewTicket() {
 
             if (error) throw error;
 
-            // Add a system comment about the status change
             await supabase
                 .from('comments')
                 .insert({
@@ -185,7 +208,6 @@ export function ViewTicket() {
                     type: 'status_change'
                 });
 
-            // Fetch updated comments
             const { data: commentsData, error: commentsError } = await supabase
                 .from('comments')
                 .select('*, user:users(email)')
@@ -199,10 +221,10 @@ export function ViewTicket() {
             console.error('Error updating ticket status:', err);
             alert('Failed to update ticket status');
         }
-    }
+    }, [session?.user?.id, ticket?.id, isAgent, supabase]);
 
-    async function handlePriorityChange(newPriority: Ticket['priority']) {
-        if (!session?.user?.id || !ticket) return;
+    const handlePriorityChange = useCallback(async (newPriority: Ticket['priority']) => {
+        if (!session?.user?.id || !ticket || !isAgent) return;
 
         try {
             const { error } = await supabase
@@ -221,7 +243,6 @@ export function ViewTicket() {
                     type: 'system'
                 });
 
-            // Fetch updated comments
             const { data: commentsData, error: commentsError } = await supabase
                 .from('comments')
                 .select('*, user:users(email)')
@@ -235,10 +256,10 @@ export function ViewTicket() {
             console.error('Error updating ticket priority:', err);
             alert('Failed to update ticket priority');
         }
-    }
+    }, [session?.user?.id, ticket?.id, isAgent, supabase]);
 
-    async function handleAssigneeChange(agentId: string) {
-        if (!session?.user?.id || !ticket) return;
+    const handleAssigneeChange = useCallback(async (agentId: string) => {
+        if (!session?.user?.id || !ticket || !isAgent) return;
 
         try {
             const { error } = await supabase
@@ -257,7 +278,6 @@ export function ViewTicket() {
                     type: 'system'
                 });
 
-            // Fetch updated comments
             const { data: commentsData, error: commentsError } = await supabase
                 .from('comments')
                 .select('*, user:users(email)')
@@ -267,15 +287,14 @@ export function ViewTicket() {
             if (commentsError) throw commentsError;
             setComments(commentsData);
             setTicket(prev => prev ? { ...prev, assigned_to_user_id: agentId, creator: prev.creator } : undefined);
-
         } catch (err) {
             console.error('Error updating ticket assignee:', err);
             alert('Failed to update ticket assignee');
         }
-    }
+    }, [session?.user?.id, ticket?.id, isAgent, agents, supabase]);
 
-    async function handleTeamChange(teamId: string) {
-        if (!session?.user?.id || !ticket) return;
+    const handleTeamChange = useCallback(async (teamId: string) => {
+        if (!session?.user?.id || !ticket || !isAgent) return;
 
         try {
             const { error } = await supabase
@@ -285,7 +304,6 @@ export function ViewTicket() {
 
             if (error) throw error;
 
-            // Add a system comment about the team assignment
             await supabase
                 .from('comments')
                 .insert({
@@ -297,7 +315,6 @@ export function ViewTicket() {
                     type: 'system'
                 });
 
-            // Fetch updated comments
             const { data: commentsData, error: commentsError } = await supabase
                 .from('comments')
                 .select('*, user:users(email)')
@@ -311,7 +328,7 @@ export function ViewTicket() {
             console.error('Error updating ticket team:', err);
             alert('Failed to update ticket team');
         }
-    }
+    }, [session?.user?.id, ticket?.id, isAgent, teams, supabase]);
 
     if (isLoading) {
         return <div className="p-4 text-center">Loading ticket details...</div>;
@@ -344,7 +361,7 @@ export function ViewTicket() {
                                 </h2>
                                 <div className="flex space-x-2">
                                     {getStatusIcon(ticket.status)}
-                                    <span className="text-sm font-medium capitalize">
+                                    <span className="text-sm font-medium capitalize" data-testid="ticket-status-header">
                                         {ticket.status}
                                     </span>
                                 </div>
@@ -375,7 +392,7 @@ export function ViewTicket() {
                                             <div className="flex justify-between text-sm">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-medium">{comment.user.email}</span>
-                                                    {comment.type === 'note' && (
+                                                    {comment.type === 'note' && isAgent && (
                                                         <span className="text-yellow-600 text-xs bg-yellow-100 px-2 py-0.5 rounded-full">
                                                             Internal Note
                                                         </span>
@@ -391,17 +408,19 @@ export function ViewTicket() {
                                 )}
                             </div>
                             <form onSubmit={handleSubmitComment} className="mt-4">
-                                <div className="mb-2">
-                                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                                        <input
-                                            type="checkbox"
-                                            checked={isInternalNote}
-                                            onChange={(e) => setIsInternalNote(e.target.checked)}
-                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                        />
-                                        Make this an internal note (only visible to agents)
-                                    </label>
-                                </div>
+                                {isAgent && (
+                                    <div className="mb-2">
+                                        <label className="flex items-center gap-2 text-sm text-gray-600">
+                                            <input
+                                                type="checkbox"
+                                                checked={isInternalNote}
+                                                onChange={(e) => setIsInternalNote(e.target.checked)}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            Make this an internal note (only visible to agents)
+                                        </label>
+                                    </div>
+                                )}
                                 <div className="flex gap-2">
                                     <textarea
                                         value={newComment}
@@ -433,90 +452,148 @@ export function ViewTicket() {
                             </h3>
                         </div>
                         <div className="p-4 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Status
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        value={ticket.status}
-                                        onChange={(e) => handleStatusChange(e.target.value as Ticket['status'])}
-                                        className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="new">🔵 New</option>
-                                        <option value="open">🔴 Open</option>
-                                        <option value="pending">🟡 Pending</option>
-                                        <option value="solved">🟢 Solved</option>
-                                        <option value="closed">⚫ Closed</option>
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                        <MoreVertical size={16} className="text-gray-400" />
+                            {isAgent && (
+                                <>
+                                    <div>
+                                        <label 
+                                            htmlFor="ticket-status"
+                                            className="block text-sm font-medium text-gray-700 mb-1"
+                                        >
+                                            Status
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                id="ticket-status"
+                                                value={ticket.status}
+                                                onChange={(e) => handleStatusChange(e.target.value as Ticket['status'])}
+                                                className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            >
+                                                <option value="new">🔵 New</option>
+                                                <option value="open">🔴 Open</option>
+                                                <option value="pending">🟡 Pending</option>
+                                                <option value="solved">🟢 Solved</option>
+                                                <option value="closed">⚫ Closed</option>
+                                            </select>
+                                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <MoreVertical size={16} className="text-gray-400" />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Priority
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        value={ticket.priority}
-                                        onChange={(e) => handlePriorityChange(e.target.value as Ticket['priority'])}
-                                        className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="low">🟢 Low Priority</option>
-                                        <option value="medium">🟡 Medium Priority</option>
-                                        <option value="high">🔴 High Priority</option>
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                        <Flag size={16} className="text-gray-400" />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Priority
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={ticket.priority}
+                                                onChange={(e) => handlePriorityChange(e.target.value as Ticket['priority'])}
+                                                className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            >
+                                                <option value="low">🟢 Low Priority</option>
+                                                <option value="medium">🟡 Medium Priority</option>
+                                                <option value="high">🔴 High Priority</option>
+                                            </select>
+                                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <Flag size={16} className="text-gray-400" />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Assigned To
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        value={ticket.assigned_to_user_id || ""}
-                                        onChange={(e) => handleAssigneeChange(e.target.value)}
-                                        className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="">👤 Unassigned</option>
-                                        {agents.map((agent) => (
-                                            <option key={agent.id} value={agent.id}>
-                                                👤 {agent.email} ({agent.role})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                        <User size={16} className="text-gray-400" />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Assigned To
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={ticket.assigned_to_user_id || ""}
+                                                onChange={(e) => handleAssigneeChange(e.target.value)}
+                                                className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            >
+                                                <option value="">👤 Unassigned</option>
+                                                {agents.map((agent) => (
+                                                    <option key={agent.id} value={agent.id}>
+                                                        👤 {agent.email} ({agent.role})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <User size={16} className="text-gray-400" />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Team
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        value={ticket.team_id || ""}
-                                        onChange={(e) => handleTeamChange(e.target.value)}
-                                        className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    >
-                                        <option value="">👥 No Team</option>
-                                        {teams.map((team) => (
-                                            <option key={team.id} value={team.id}>
-                                                👥 {team.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                        <Users size={16} className="text-gray-400" />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Team
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={ticket.team_id || ""}
+                                                onChange={(e) => handleTeamChange(e.target.value)}
+                                                className="appearance-none w-full bg-white border border-gray-300 rounded-lg py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            >
+                                                <option value="">👥 No Team</option>
+                                                {teams.map((team) => (
+                                                    <option key={team.id} value={team.id}>
+                                                        👥 {team.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <Users size={16} className="text-gray-400" />
+                                            </div>
+                                        </div>
                                     </div>
+                                </>
+                            )}
+                            
+                            {!isAgent && (
+                                <>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Status
+                                        </label>
+                                        <p className="text-sm text-gray-600">
+                                            {ticket.status === 'new' && '🔵 New'}
+                                            {ticket.status === 'open' && '🔴 Open'}
+                                            {ticket.status === 'pending' && '🟡 Pending'}
+                                            {ticket.status === 'solved' && '🟢 Solved'}
+                                            {ticket.status === 'closed' && '⚫ Closed'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Priority
+                                        </label>
+                                        <p className="text-sm text-gray-600">
+                                            {ticket.priority === 'low' && '🟢 Low Priority'}
+                                            {ticket.priority === 'medium' && '🟡 Medium Priority'}
+                                            {ticket.priority === 'high' && '🔴 High Priority'}
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                            
+                            {!isAgent && ticket.assigned_to_user_id && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Assigned To
+                                    </label>
+                                    <p className="text-sm text-gray-600">
+                                        👤 {agents.find(a => a.id === ticket.assigned_to_user_id)?.email || 'Unknown Agent'}
+                                    </p>
                                 </div>
-                            </div>
+                            )}
+                            
+                            {!isAgent && ticket.team_id && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Team
+                                    </label>
+                                    <p className="text-sm text-gray-600">
+                                        👥 {teams.find(t => t.id === ticket.team_id)?.name || 'Unknown Team'}
+                                    </p>
+                                </div>
+                            )}
+
                             <div className="border-t pt-4 mt-4">
                                 <div className="space-y-3">
                                     <div>

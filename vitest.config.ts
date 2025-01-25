@@ -10,6 +10,6 @@ export default defineConfig({
         setupFiles: ['./tests/setup.ts'],
         testTimeout: 5000,
         hookTimeout: 30000,
-        maxConcurrency: 1
+        maxConcurrency: 10
     },
 }) 

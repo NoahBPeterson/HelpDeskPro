@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
@@ -63,37 +63,102 @@ export function TicketList() {
     { value: 'closed', label: 'Closed', emoji: '⚫' },
   ];
 
+  // Memoize the workspace query
+  const workspaceQuery = useMemo(() => {
+    if (!session?.user?.id) return null;
+    return supabase
+      .from('users')
+      .select('workspace_id')
+      .eq('id', session.user.id)
+      .single();
+  }, [session?.user?.id]);
+
+  // Memoize the agents query based on workspace
+  const agentsQuery = useMemo(() => {
+    if (!session?.user?.id) return null;
+    return async (workspace_id: string) => {
+      return supabase
+        .from('users')
+        .select('id, email')
+        .eq('workspace_id', workspace_id)
+        .neq('role', 'end_user');
+    };
+  }, [session?.user?.id]);
+
+  // Memoize the teams query based on workspace
+  const teamsQuery = useMemo(() => {
+    if (!session?.user?.id) return null;
+    return async (workspace_id: string) => {
+      return supabase
+        .from('teams')
+        .select('*')
+        .eq('workspace_id', workspace_id);
+    };
+  }, [session?.user?.id]);
+
+  // Memoize the tickets query based on filters
+  const ticketsQuery = useMemo(() => {
+    if (!session?.user?.id || selectedAssignees.length === 0 || selectedTeams.length === 0) return null;
+    
+    return async (workspace_id: string) => {
+      let query = supabase
+        .from('tickets')
+        .select(`
+          *,
+          creator:users!tickets_created_by_user_id_fkey(email)
+        `)
+        .eq('workspace_id', workspace_id);
+
+      // Add status filter
+      if (selectedStatuses.length > 0) {
+        query = query.in('status', selectedStatuses);
+      }
+
+      // Add assignee filter
+      const hasUnassigned = selectedAssignees.includes('unassigned');
+      const assigneeIds = selectedAssignees.filter(id => id !== 'unassigned');
+      
+      if (hasUnassigned && assigneeIds.length > 0) {
+        query = query.or(`assigned_to_user_id.is.null,assigned_to_user_id.in.(${assigneeIds.join(',')})`);
+      } else if (hasUnassigned) {
+        query = query.is('assigned_to_user_id', null);
+      } else if (assigneeIds.length > 0) {
+        query = query.in('assigned_to_user_id', assigneeIds);
+      }
+
+      // Add team filter
+      const hasUnassignedTeam = selectedTeams.includes('unassigned');
+      const teamIds = selectedTeams.filter(id => id !== 'unassigned');
+      
+      if (hasUnassignedTeam && teamIds.length > 0) {
+        query = query.or(`team_id.is.null,team_id.in.(${teamIds.join(',')})`);
+      } else if (hasUnassignedTeam) {
+        query = query.is('team_id', null);
+      } else if (teamIds.length > 0) {
+        query = query.in('team_id', teamIds);
+      }
+
+      return query;
+    };
+  }, [session?.user?.id, selectedStatuses, selectedAssignees, selectedTeams]);
+
   // First effect to fetch agents and teams
   useEffect(() => {
     async function fetchAgentsAndTeams() {
-      if (!session?.user?.id) return;
+      if (!workspaceQuery || !agentsQuery || !teamsQuery) return;
 
       try {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('workspace_id')
-          .eq('id', session.user.id)
-          .single();
-
+        const { data: userData, error: userError } = await workspaceQuery;
         if (userError) throw userError;
 
         // Fetch agents
-        const { data: agentsData, error: agentsError } = await supabase
-          .from('users')
-          .select('id, email')
-          .eq('workspace_id', userData.workspace_id)
-          .neq('role', 'end_user');
-
+        const { data: agentsData, error: agentsError } = await agentsQuery(userData.workspace_id);
         if (agentsError) throw agentsError;
         setAgents(agentsData || []);
         setSelectedAssignees(['unassigned', ...(agentsData || []).map(agent => agent.id)]);
 
         // Fetch teams
-        const { data: teamsData, error: teamsError } = await supabase
-          .from('teams')
-          .select('*')
-          .eq('workspace_id', userData.workspace_id);
-
+        const { data: teamsData, error: teamsError } = await teamsQuery(userData.workspace_id);
         if (teamsError) throw teamsError;
         setTeams(teamsData || []);
         setSelectedTeams(['unassigned', ...(teamsData || []).map(team => team.id)]);
@@ -103,65 +168,22 @@ export function TicketList() {
     }
 
     fetchAgentsAndTeams();
-  }, [session?.user?.id]);
+  }, [workspaceQuery, agentsQuery, teamsQuery]);
 
   // Second effect to fetch tickets
   useEffect(() => {
     async function fetchTickets() {
-      if (!session?.user?.id || selectedAssignees.length === 0 || selectedTeams.length === 0) return;
+      if (!workspaceQuery || !ticketsQuery) return;
 
       try {
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('workspace_id')
-          .eq('id', session.user.id)
-          .single();
-
+        const { data: userData, error: userError } = await workspaceQuery;
         if (userError) throw userError;
 
-        // Build the query
-        let query = supabase
-          .from('tickets')
-          .select(`
-            *,
-            creator:users!tickets_created_by_user_id_fkey(email)
-          `)
-          .eq('workspace_id', userData.workspace_id);
-
-        // Add status filter
-        if (selectedStatuses.length > 0) {
-          query = query.in('status', selectedStatuses);
-        }
-
-        // Add assignee filter
-        const hasUnassigned = selectedAssignees.includes('unassigned');
-        const assigneeIds = selectedAssignees.filter(id => id !== 'unassigned');
-        
-        if (hasUnassigned && assigneeIds.length > 0) {
-          query = query.or(`assigned_to_user_id.is.null,assigned_to_user_id.in.(${assigneeIds.join(',')})`);
-        } else if (hasUnassigned) {
-          query = query.is('assigned_to_user_id', null);
-        } else if (assigneeIds.length > 0) {
-          query = query.in('assigned_to_user_id', assigneeIds);
-        }
-
-        // Add team filter
-        const hasUnassignedTeam = selectedTeams.includes('unassigned');
-        const teamIds = selectedTeams.filter(id => id !== 'unassigned');
-        
-        if (hasUnassignedTeam && teamIds.length > 0) {
-          query = query.or(`team_id.is.null,team_id.in.(${teamIds.join(',')})`);
-        } else if (hasUnassignedTeam) {
-          query = query.is('team_id', null);
-        } else if (teamIds.length > 0) {
-          query = query.in('team_id', teamIds);
-        }
+        const query = await ticketsQuery(userData.workspace_id);
+        if (!query) return;
 
         const { data, error } = await query;
-
         if (error) throw error;
-        console.log('Fetched tickets:', data);
-        console.log('Query filters:', { selectedStatuses, selectedAssignees, selectedTeams });
 
         // Sort tickets by priority (high -> medium -> low) and then by creation date
         const priorityOrder: Record<Ticket['priority'], number> = { high: 0, medium: 1, low: 2 };
@@ -183,7 +205,7 @@ export function TicketList() {
     }
 
     fetchTickets();
-  }, [session?.user?.id, selectedStatuses, selectedAssignees, selectedTeams]);
+  }, [workspaceQuery, ticketsQuery]);
 
   const handleStatusToggle = (status: Ticket['status']) => {
     setSelectedStatuses(prev => {

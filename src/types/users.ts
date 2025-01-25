@@ -9,3 +9,6 @@ export type User = UserRow & {
     email: string;
     role: 'admin' | 'agent' | 'end_user';
 }; 
+
+// UserRole
+export type UserRole = 'admin' | 'agent' | 'end_user';

@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom'
+import { AuthProvider, UserProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
@@ -12,36 +12,41 @@ import { ViewTicket } from './components/ViewTicket'
 import { InviteUsers } from './components/InviteUsers'
 import { AcceptInvite } from "./pages/AcceptInvite"
 import { TeamManagement } from './components/TeamManagement'
+import { SessionContextProvider } from '@supabase/auth-helpers-react'
+import { supabase } from './lib/supabase'
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/tickets" element={<TicketList />} />
-                    <Route path="/create" element={<CreateTicket />} />
-                    <Route path="/ticket/:id" element={<ViewTicket />} />
-                    <Route path="/invite" element={<InviteUsers />} />
-                    <Route path="/accept-invite" element={<AcceptInvite />} />
-                    <Route path="/teams" element={<TeamManagement />} />
-                  </Routes>
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </AuthProvider>
-    </Router>
+    <SessionContextProvider supabaseClient={supabase}>
+      <Router>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              element={
+                <ProtectedRoute>
+                  <UserProvider>
+                    <Layout>
+                      <Outlet />
+                    </Layout>
+                  </UserProvider>
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/tickets" element={<TicketList />} />
+              <Route path="/create" element={<CreateTicket />} />
+              <Route path="/ticket/:id" element={<ViewTicket />} />
+              <Route path="/invite" element={<InviteUsers />} />
+              <Route path="/accept-invite" element={<AcceptInvite />} />
+              <Route path="/teams" element={<TeamManagement />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </SessionContextProvider>
   )
 }
 
