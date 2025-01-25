@@ -8,7 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 const LayoutContent = memo(({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 overflow-y-hidden overflow-x-hidden">
       <div className="max-w-7xl mx-auto p-4">{children}</div>
     </div>
   );
@@ -106,7 +106,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-full w-full bg-gray-50">
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-800">Help Desk</h1>
+          <h1 className="text-xl font-bold text-gray-800">HelpDesk Pro</h1>
         </div>
         <nav className="flex-1 p-4 overflow-y-auto">
           <Link

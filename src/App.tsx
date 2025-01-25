@@ -14,6 +14,7 @@ import { AcceptInvite } from "./pages/AcceptInvite"
 import { TeamManagement } from './components/TeamManagement'
 import { SessionContextProvider } from '@supabase/auth-helpers-react'
 import { supabase } from './lib/supabase'
+import { LandingPage } from './pages/LandingPage'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Router>
         <AuthProvider>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
@@ -34,15 +36,14 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/tickets" element={<TicketList />} />
               <Route path="/create" element={<CreateTicket />} />
               <Route path="/ticket/:id" element={<ViewTicket />} />
               <Route path="/invite" element={<InviteUsers />} />
-              <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/teams" element={<TeamManagement />} />
             </Route>
+            <Route path="/accept-invite" element={<AcceptInvite />} />
           </Routes>
         </AuthProvider>
       </Router>
