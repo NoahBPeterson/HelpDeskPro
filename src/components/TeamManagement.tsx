@@ -324,7 +324,7 @@ export function TeamManagement() {
             </form>
 
             {/* Teams List */}
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-6 overflow-y-auto">
                 {teams.map((team) => (
                     <div key={team.id} className="bg-white rounded-lg shadow p-4">
                         <div className="flex justify-between items-center mb-4">

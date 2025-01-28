@@ -409,7 +409,7 @@ export function TicketList() {
           )}
         </div>
       ) : (
-        <div className="bg-white shadow rounded-lg">
+        <div className="bg-white shadow rounded-lg overflow-y-auto">
           <ul className="divide-y divide-gray-200">
             {tickets.map((ticket) => (
               <li key={ticket.id}>

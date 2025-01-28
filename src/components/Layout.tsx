@@ -8,7 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 const LayoutContent = memo(({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex-1 overflow-y-hidden overflow-x-hidden">
+    <div className="flex-1 overflow-x-hidden">
       <div className="max-w-7xl mx-auto p-4">{children}</div>
     </div>
   );
