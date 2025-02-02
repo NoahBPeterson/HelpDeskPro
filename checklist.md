@@ -1,4 +1,4 @@
-# Zendesk Clone (AutoCRM) Project Checklist
+# Zendesk Clone (HelpDesk Pro) Project Checklist
 ## Legend
 - (%%%) = Must complete by Jan 24 (App Complete deadline)
 - [x] = Completed
