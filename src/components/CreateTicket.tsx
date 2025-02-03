@@ -162,171 +162,168 @@ export function CreateTicket() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">
-          Create New Ticket
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Please provide detailed information about your issue
-        </p>
-      </div>
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Your Name
-            </label>
-            <input
-              type="text"
-              required
-              className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${errors.name ? "border-red-300" : "border-gray-300"}`}
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  name: e.target.value,
-                })
-              }
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={16} className="mr-1" />
-                {errors.name}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email Address
-            </label>
-            <input
-              type="email"
-              required
-              className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${errors.email ? "border-red-300" : "border-gray-300"}`}
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  email: e.target.value,
-                })
-              }
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={16} className="mr-1" />
-                {errors.email}
-              </p>
-            )}
-          </div>
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
+          <h2 className="text-2xl font-bold text-white">
+            Create New Ticket
+          </h2>
+          <p className="mt-2 text-blue-100">
+            Please provide detailed information about your issue
+          </p>
         </div>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 text-left">
-              Subject
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                required
-                maxLength={80}
-                className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${errors.title ? "border-red-300" : "border-gray-300"} pr-10`}
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    title: e.target.value,
-                  })
-                }
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <CharacterCount current={formData.title.length} max={80} />
+        <form onSubmit={handleSubmit} className="p-8 space-y-8 bg-blue-400">
+          {/* Contact Information */}
+          <div className="bg-blue-300 rounded-lg p-6 space-y-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  className={`w-full rounded-lg shadow-sm transition-colors bg-white ${
+                    errors.name 
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
+                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+                {errors.name && (
+                  <p className="mt-2 text-sm text-red-600 flex items-center">
+                    <AlertCircle size={16} className="mr-1" />
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  className={`w-full rounded-lg shadow-sm transition-colors bg-white ${
+                    errors.email 
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
+                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+                {errors.email && (
+                  <p className="mt-2 text-sm text-red-600 flex items-center">
+                    <AlertCircle size={16} className="mr-1" />
+                    {errors.email}
+                  </p>
+                )}
               </div>
             </div>
-            {errors.title && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={16} className="mr-1" />
-                {errors.title}
-              </p>
-            )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Ticket Details */}
+          <div className="bg-blue-300 rounded-lg p-6 space-y-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Ticket Details</h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Category
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Subject
               </label>
-              <select
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    category: e.target.value,
-                  })
-                }
-              >
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  maxLength={80}
+                  className={`w-full rounded-lg shadow-sm pr-12 transition-colors bg-white ${
+                    errors.title 
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
+                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <CharacterCount current={formData.title.length} max={80} />
+                </div>
+              </div>
+              {errors.title && (
+                <p className="mt-2 text-sm text-red-600 flex items-center">
+                  <AlertCircle size={16} className="mr-1" />
+                  {errors.title}
+                </p>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Priority
-              </label>
-              <select
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                value={formData.priority}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    priority: e.target.value as "low" | "medium" | "high",
-                  })
-                }
-              >
-                <option value="low">Low - General inquiry or minor issue</option>
-                <option value="medium">Medium - Service impacted but working</option>
-                <option value="high">High - Service completely unavailable</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <div className="relative">
-              <textarea
-                required
-                maxLength={2000}
-                rows={6}
-                className={`mt-1 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 ${errors.description ? "border-red-300" : "border-gray-300"} pr-10`}
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    description: e.target.value,
-                  })
-                }
-              />
-              <div className="absolute right-3 top-3">
-                <CharacterCount current={formData.description.length} max={2000} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <select
+                  className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Priority
+                </label>
+                <select
+                  className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as "low" | "medium" | "high" })}
+                >
+                  <option value="low">🟢 Low - General inquiry or minor issue</option>
+                  <option value="medium">🟡 Medium - Service impacted but working</option>
+                  <option value="high">🔴 High - Service completely unavailable</option>
+                </select>
               </div>
             </div>
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={16} className="mr-1" />
-                {errors.description}
-              </p>
-            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <div className="relative">
+                <textarea
+                  required
+                  maxLength={2000}
+                  rows={6}
+                  className={`w-full rounded-lg shadow-sm pr-12 transition-colors bg-white ${
+                    errors.description 
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
+                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+                <div className="absolute right-3 top-3">
+                  <CharacterCount current={formData.description.length} max={2000} />
+                </div>
+              </div>
+              {errors.description && (
+                <p className="mt-2 text-sm text-red-600 flex items-center">
+                  <AlertCircle size={16} className="mr-1" />
+                  {errors.description}
+                </p>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Attachments
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
-              <div className="space-y-1 text-center">
+
+          {/* Attachments */}
+          <div className="bg-blue-300 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Attachments</h3>
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors bg-white">
+              <div className="space-y-2 text-center">
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
                 <div className="flex text-sm text-gray-600">
                   <label
@@ -355,7 +352,7 @@ export function CreateTicket() {
                 {formData.attachments.map((file, index) => (
                   <li
                     key={index}
-                    className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md"
+                    className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200"
                   >
                     <span className="text-sm text-gray-700 truncate">
                       {file.name}
@@ -363,7 +360,7 @@ export function CreateTicket() {
                     <button
                       type="button"
                       onClick={() => removeFile(index)}
-                      className="text-gray-400 hover:text-gray-500"
+                      className="text-gray-400 hover:text-red-500 transition-colors"
                     >
                       <X size={16} />
                     </button>
@@ -372,17 +369,18 @@ export function CreateTicket() {
               </ul>
             )}
           </div>
-        </div>
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400"
-          >
-            {isSubmitting ? "Creating..." : "Create Ticket"}
-          </button>
-        </div>
-      </form>
+
+          <div className="flex justify-end pt-6">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSubmitting ? "Creating..." : "Create Ticket"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
