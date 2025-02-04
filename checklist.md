@@ -41,11 +41,11 @@
 ### 3. Ticket Management (%%% CORE MVP)
 - [x] Create ticket interface
   - [x] Title, description, status, priority
-  - [%%%] Ticket list view with filters # Ensure all filters work
+  - [x] Ticket list view with filters # Ensure all filters work
   - [x] Ticket detail view
   - [x] Global search with prefix matching # Search tickets and comments
 - [x] Ticket assignment system
-  - [%%%] Assign to agents # Must have working assignment
+  - [x] Assign to agents # Must have working assignment
   - [x] Track assignment history
 - [x] Internal notes for agent collaboration
 - [x] Full conversation history
@@ -66,9 +66,9 @@
 - [%%%] User profile management
   - [%%%] Extended profile fields # Minimum: name/avatar
   - [%%%] Profile editing interface
-- [%%%] Team management
+- [x] Team management
   - [x] Create/edit teams
-  - [%%%] Assign agents to teams # Required for ticket routing
+  - [x] Assign agents to teams # Required for ticket routing
   - [x] Team-based ticket routing
 
 ### 5. Workspace Isolation (%%% MULTI-TENANCY)
