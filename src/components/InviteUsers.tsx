@@ -1,49 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Mail, AlertCircle } from "lucide-react";
-import { supabase } from "../lib/supabase";
-import { useAuth } from '../contexts/AuthContext'
+import { useInvites } from '../contexts/InviteContext';
 import { Database } from "../lib/database.types";
 
 type Invitation = Database['public']['Tables']['invitations']['Row'];
 
 export function InviteUsers() {
-  const { session } = useAuth();
+  const {
+    invitations,
+    userRole,
+    isLoading,
+    error,
+    setError,
+    createInvitation,
+    createBulkInvitations,
+    removeInvitation
+  } = useInvites();
+
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Invitation['role']>("end_user");
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [bulkEmails, setBulkEmails] = useState("");
   const [showBulkInput, setShowBulkInput] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
-
-  // Fetch user's role and workspace ID from database
-  useEffect(() => {
-    async function fetchUserData() {
-      if (!session?.user?.id) return;
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('role, workspace_id')
-        .eq('id', session.user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user data:', error);
-        return;
-      }
-
-      if (data) {
-        console.log('Setting user role to:', data.role);
-        console.log('Setting workspace ID to:', data.workspace_id);
-        setUserRole(data.role);
-        setWorkspaceId(data.workspace_id);
-      }
-    }
-
-    fetchUserData();
-  }, [session?.user?.id]);
 
   // Get available roles based on current user's role
   const roles = (() => {
@@ -70,31 +47,6 @@ export function InviteUsers() {
     }
   }, [roles]);
 
-  // Fetch existing invitations
-  useEffect(() => {
-    async function fetchInvitations() {
-      if (!session?.user) return;
-
-      const { data, error } = await supabase
-        .from('invitations')
-        .select('*')
-        .eq('status', 'pending');
-
-      if (error) {
-        console.error('Error fetching invitations:', error);
-        return;
-      }
-
-      setInvitations(data);
-    }
-
-    fetchInvitations();
-  }, [session]);
-
-  if (!session?.user) {
-    return null;
-  }
-
   if (roles.length === 0) {
     return null;
   }
@@ -105,67 +57,17 @@ export function InviteUsers() {
 
   const handleSingleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session?.user || !workspaceId) return;
 
     if (!validateEmail(email)) {
       setError("Please enter a valid email address");
       return;
     }
 
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // First create the invitation record
-      const { data: invitation, error: inviteError } = await supabase
-        .from('invitations')
-        .insert({
-          email,
-          role,
-          workspace_id: workspaceId,
-          invited_by_user_id: session.user.id,
-          token: crypto.randomUUID()
-        })
-        .select()
-        .single();
-
-      if (inviteError) {
-        console.error('Error creating invitation:', inviteError);
-        setError("Failed to create invitation");
-        setIsLoading(false);
-        return;
-      }
-
-      // Then send the magic link
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/accept-invite?token=${invitation.token}`
-        }
-      });
-
-      if (otpError) {
-        console.error('Error sending invitation:', otpError);
-        // Clean up the invitation record if email fails
-        await supabase.from('invitations').delete().eq('id', invitation.id);
-        setError("Failed to send invitation");
-        setIsLoading(false);
-        return;
-      }
-
-      setInvitations([...invitations, invitation]);
-      setEmail("");
-      setIsLoading(false);
-    } catch (err) {
-      console.error('Error:', err);
-      setError("An unexpected error occurred");
-      setIsLoading(false);
-    }
+    await createInvitation(email, role);
+    setEmail("");
   };
 
   const handleBulkInvite = async () => {
-    if (!session?.user || !workspaceId) return;
-
     const emails = bulkEmails
       .split("\n")
       .map((e) => e.trim())
@@ -176,93 +78,23 @@ export function InviteUsers() {
       return;
     }
 
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // First create all invitation records
-      const { data: invitations, error: inviteError } = await supabase
-        .from('invitations')
-        .insert(
-          emails.map(email => ({
-            email,
-            role,
-            workspace_id: workspaceId,
-            invited_by_user_id: session.user.id,
-            token: crypto.randomUUID()
-          }))
-        )
-        .select();
-
-      if (inviteError) {
-        console.error('Error creating invitations:', inviteError);
-        setError("Failed to create invitations");
-        setIsLoading(false);
-        return;
-      }
-
-      // Then send magic links
-      const emailPromises = invitations.map(invitation => 
-        supabase.auth.signInWithOtp({
-          email: invitation.email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/accept-invite?token=${invitation.token}`
-          }
-        })
-      );
-
-      const results = await Promise.allSettled(emailPromises);
-      
-      // Check for any failed emails
-      const failedEmails = results
-        .map((result, index) => result.status === 'rejected' ? invitations[index].email : null)
-        .filter((email): email is string => email !== null);
-
-      if (failedEmails.length > 0) {
-        // Clean up invitations for failed emails
-        await supabase
-          .from('invitations')
-          .delete()
-          .in('email', failedEmails);
-          
-        setError(`Failed to send invitations to: ${failedEmails.join(', ')}`);
-        setIsLoading(false);
-        return;
-      }
-
-      setInvitations(prev => [...prev, ...invitations]);
-      setBulkEmails("");
-      setShowBulkInput(false);
-      setIsLoading(false);
-    } catch (err) {
-      console.error('Error:', err);
-      setError("An unexpected error occurred");
-      setIsLoading(false);
-    }
-  };
-
-  const removeInvitation = async (id: string) => {
-    if (!session?.user) return;
-
-    const { error } = await supabase
-      .from('invitations')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error removing invitation:', error);
+    const failedEmails = await createBulkInvitations(emails, role);
+    
+    if (failedEmails.length > 0) {
+      setError(`Failed to send invitations to: ${failedEmails.join(', ')}`);
       return;
     }
 
-    setInvitations(invitations.filter((inv) => inv.id !== id));
+    setBulkEmails("");
+    setShowBulkInput(false);
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Invite Users</h2>
-          <p className="mt-1 text-sm text-gray-500">
+      <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg shadow">
+        <div className="p-4 border-b border-gray-600 bg-gray-800">
+          <h2 className="text-lg font-semibold text-white">Invite Users</h2>
+          <p className="mt-1 text-sm text-gray-300">
             Invite new users to your help desk
           </p>
         </div>
@@ -271,7 +103,7 @@ export function InviteUsers() {
           <form onSubmit={handleSingleInvite} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-400">
                   Email Address
                 </label>
                 <div className="mt-1 relative rounded-md shadow-sm">
@@ -282,20 +114,20 @@ export function InviteUsers() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                    className="focus:ring-gray-400 focus:border-gray-400 block w-full pl-10 sm:text-sm border border-gray-600 rounded-md bg-gray-700 text-gray-100"
                     placeholder="email@example.com"
                     disabled={isLoading}
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-400">
                   Role
                 </label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value as Invitation['role'])}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-600 focus:outline-none focus:ring-gray-400 focus:border-gray-400 bg-gray-700 text-gray-100 sm:text-sm rounded-md"
                   disabled={isLoading}
                 >
                   {roles.map((role) => (
@@ -341,13 +173,13 @@ export function InviteUsers() {
                 value={bulkEmails}
                 onChange={(e) => setBulkEmails(e.target.value)}
                 rows={4}
-                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                className="shadow-sm focus:ring-gray-400 focus:border-gray-400 block w-full sm:text-sm border border-gray-600 rounded-md bg-gray-700 text-gray-100"
                 placeholder="john@example.com&#10;jane@example.com&#10;steve@example.com"
                 disabled={isLoading}
               />
               <button
                 onClick={handleBulkInvite}
-                className="mt-2 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-2 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-gray-700 to-gray-600 rounded-md hover:from-gray-600 hover:to-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isLoading}
               >
                 {isLoading ? "Adding..." : "Add Bulk Invitations"}
@@ -358,9 +190,9 @@ export function InviteUsers() {
       </div>
       {/* Pending Invitations */}
       {invitations.length > 0 && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800">
+        <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-lg shadow">
+          <div className="p-4 border-b border-gray-600 bg-gray-800">
+            <h3 className="text-lg font-semibold text-white">
               Pending Invitations
             </h3>
           </div>
@@ -369,15 +201,15 @@ export function InviteUsers() {
               {invitations.map((inv) => (
                 <div
                   key={inv.id}
-                  className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md"
+                  className="flex items-center justify-between py-2 px-3 bg-gray-700 rounded-md"
                 >
                   <div className="flex items-center space-x-3">
                     <Mail size={18} className="text-gray-400" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-white">
                         {inv.email}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-300">
                         Role: {roles.find((r) => r.id === inv.role)?.label}
                       </p>
                     </div>

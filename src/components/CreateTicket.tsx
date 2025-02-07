@@ -11,7 +11,7 @@ function CharacterCount({ current, max }: { current: number; max: number }) {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
   
-  let color = 'text-blue-500';
+  let color = 'text-purple-500';
   if (percentage >= 95) color = 'text-red-500';
   else if (percentage >= 80) color = 'text-yellow-500';
 
@@ -168,31 +168,31 @@ export function CreateTicket() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
+      <div className="bg-gray-900 rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-gray-800 to-gray-600 px-6 py-8">
           <h2 className="text-2xl font-bold text-white">
             Create New Ticket
           </h2>
-          <p className="mt-2 text-blue-100">
+          <p className="mt-2 text-gray-100">
             Please provide detailed information about your issue
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="p-8 space-y-8 bg-blue-400">
+        <form onSubmit={handleSubmit} className="p-8 space-y-8 bg-gradient-to-br from-gray-700 to-gray-600">
           {/* Contact Information */}
-          <div className="bg-blue-300 rounded-lg p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Information</h3>
+          <div className="bg-gray-800 rounded-lg p-6 space-y-6">
+            <h3 className="text-lg font-semibold text-gray-300 mb-4">Contact Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Your Name
                 </label>
                 <input
                   type="text"
                   required
-                  className={`w-full rounded-lg shadow-sm transition-colors bg-white ${
+                  className={`w-full rounded-lg shadow-sm transition-colors bg-gray-900 ${
                     errors.name 
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      : "border border-gray-500 focus:border-gray-400 focus:ring-gray-400"
                   }`}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -205,16 +205,16 @@ export function CreateTicket() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email Address
                 </label>
                 <input
                   type="email"
                   required
-                  className={`w-full rounded-lg shadow-sm transition-colors bg-white ${
+                  className={`w-full rounded-lg shadow-sm transition-colors bg-gray-900 ${
                     errors.email 
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      : "border border-gray-500 focus:border-gray-400 focus:ring-gray-400"
                   }`}
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -230,10 +230,10 @@ export function CreateTicket() {
           </div>
 
           {/* Ticket Details */}
-          <div className="bg-blue-300 rounded-lg p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Ticket Details</h3>
+          <div className="bg-gray-800 rounded-lg p-6 space-y-6">
+            <h3 className="text-lg font-semibold text-gray-300 mb-4">Ticket Details</h3>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Subject
               </label>
               <div className="relative">
@@ -241,10 +241,10 @@ export function CreateTicket() {
                   type="text"
                   required
                   maxLength={80}
-                  className={`w-full rounded-lg shadow-sm pr-12 transition-colors bg-white ${
+                  className={`w-full rounded-lg shadow-sm pr-12 transition-colors bg-gray-900 ${
                     errors.title 
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      : "border border-gray-500 focus:border-gray-400 focus:ring-gray-400"
                   }`}
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -263,11 +263,11 @@ export function CreateTicket() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Category
                 </label>
                 <select
-                  className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
+                  className="w-full rounded-lg border border-gray-500 shadow-sm focus:border-gray-400 focus:ring-gray-400 bg-gray-900 text-gray-100"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 >
@@ -279,11 +279,11 @@ export function CreateTicket() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Priority
                 </label>
                 <select
-                  className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white"
+                  className="w-full rounded-lg border border-gray-500 shadow-sm focus:border-gray-400 focus:ring-gray-400 bg-gray-900 text-gray-100"
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value as "low" | "medium" | "high" })}
                 >
@@ -295,7 +295,7 @@ export function CreateTicket() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Description
               </label>
               <div className="relative">
@@ -303,10 +303,10 @@ export function CreateTicket() {
                   required
                   maxLength={2000}
                   rows={6}
-                  className={`w-full rounded-lg shadow-sm pr-12 transition-colors bg-white ${
+                  className={`w-full rounded-lg shadow-sm pr-12 transition-colors bg-gray-900 ${
                     errors.description 
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500" 
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      : "border border-gray-500 focus:border-gray-400 focus:ring-gray-400"
                   }`}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -325,15 +325,15 @@ export function CreateTicket() {
           </div>
 
           {/* Attachments */}
-          <div className="bg-blue-300 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Attachments</h3>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors bg-white">
+          <div className="bg-gray-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-300 mb-4">Attachments</h3>
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-600 border-dashed rounded-lg hover:border-gray-500 transition-colors bg-gray-900">
               <div className="space-y-2 text-center">
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
                 <div className="flex text-sm text-gray-600">
                   <label
                     htmlFor="file-upload"
-                    className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
+                    className="relative cursor-pointer rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none"
                   >
                     <span>Upload files</span>
                     <input
@@ -357,9 +357,9 @@ export function CreateTicket() {
                 {formData.attachments.map((file, index) => (
                   <li
                     key={index}
-                    className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200"
+                    className="flex items-center justify-between py-2 px-3 bg-gray-900 rounded-lg border border-gray-700"
                   >
-                    <span className="text-sm text-gray-700 truncate">
+                    <span className="text-sm text-gray-200 truncate">
                       {file.name}
                     </span>
                     <button
@@ -379,7 +379,7 @@ export function CreateTicket() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-gray-600 to-gray-500 rounded-lg hover:from-gray-500 hover:to-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmitting ? "Creating..." : "Create Ticket"}
             </button>

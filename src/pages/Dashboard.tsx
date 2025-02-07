@@ -93,44 +93,44 @@ export function Dashboard() {
         <div className="space-y-6">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-600">Total Tickets</p>
-                            <p className="text-2xl font-semibold text-gray-900">
+                            <p className="text-sm font-medium text-gray-400">Total Tickets</p>
+                            <p className="text-2xl font-semibold text-gray-100">
                                 {stats.total}
                             </p>
                         </div>
                         <Inbox className="text-blue-500" size={24} />
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-600">Open</p>
-                            <p className="text-2xl font-semibold text-gray-900">
+                            <p className="text-sm font-medium text-gray-400">Open</p>
+                            <p className="text-2xl font-semibold text-gray-100">
                                 {stats.open}
                             </p>
                         </div>
                         <FolderOpen className="text-grey-500" size={24} />
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-600">Pending</p>
-                            <p className="text-2xl font-semibold text-gray-900">
+                            <p className="text-sm font-medium text-gray-400">Pending</p>
+                            <p className="text-2xl font-semibold text-gray-100">
                                 {stats.pending}
                             </p>
                         </div>
                         <Clock className="text-yellow-500" size={24} />
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow">
+                <div className="bg-gray-800 p-6 rounded-lg shadow">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-600">Solved</p>
-                            <p className="text-2xl font-semibold text-gray-900">
+                            <p className="text-sm font-medium text-gray-400">Solved</p>
+                            <p className="text-2xl font-semibold text-gray-100">
                                 {stats.solved}
                             </p>
                         </div>
@@ -141,9 +141,9 @@ export function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Activity */}
-                <div className="bg-white rounded-lg shadow">
-                    <div className="p-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-800">
+                <div className="bg-gray-800 rounded-lg shadow">
+                    <div className="p-4 border-b border-gray-700">
+                        <h2 className="text-lg font-semibold text-gray-100">
                             Recent Activity
                         </h2>
                     </div>
@@ -167,11 +167,11 @@ export function Dashboard() {
                                         </span>
                                     )}
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm text-gray-500 line-clamp-2">
+                                        <p className="text-sm text-gray-400 line-clamp-2">
                                             {activity.message}
                                         </p>
                                     </div>
-                                    <time className="text-sm text-gray-500">
+                                    <time className="text-sm text-gray-400">
                                         {activity.time}
                                     </time>
                                 </div>
@@ -181,20 +181,20 @@ export function Dashboard() {
                 </div>
 
                 {/* Priority Distribution */}
-                <div className="bg-white rounded-lg shadow">
-                    <div className="p-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-800">
+                <div className="bg-gray-800 rounded-lg shadow">
+                    <div className="p-4 border-b border-gray-700">
+                        <h2 className="text-lg font-semibold text-gray-100">
                             Ticket Overview
                         </h2>
                     </div>
                     <div className="p-4">
                         <div className="space-y-4">
                             <div>
-                                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                <div className="flex justify-between text-sm text-gray-400 mb-1">
                                     <span>High Priority</span>
                                     <span>{stats.highPriority} tickets</span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="w-full bg-gray-700 rounded-full h-2">
                                     <div
                                         className="bg-red-500 h-2 rounded-full"
                                         style={{
@@ -204,11 +204,11 @@ export function Dashboard() {
                                 </div>
                             </div>
                             <div>
-                                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                <div className="flex justify-between text-sm text-gray-400 mb-1">
                                     <span>Medium Priority</span>
                                     <span>{stats.mediumPriority} tickets</span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="w-full bg-gray-700 rounded-full h-2">
                                     <div
                                         className="bg-yellow-500 h-2 rounded-full"
                                         style={{
@@ -218,11 +218,11 @@ export function Dashboard() {
                                 </div>
                             </div>
                             <div>
-                                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                <div className="flex justify-between text-sm text-gray-400 mb-1">
                                     <span>Low Priority</span>
                                     <span>{stats.lowPriority} tickets</span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="w-full bg-gray-700 rounded-full h-2">
                                     <div
                                         className="bg-green-500 h-2 rounded-full"
                                         style={{

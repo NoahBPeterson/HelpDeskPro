@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Flag, Filter, User, Users } from "lucide-react";
-import { Ticket, TicketWithCreator } from "../types/tickets";
+import { Ticket } from "../types/tickets";
 import { Team } from '../types/teams';
 import { useTickets } from '../contexts/TicketContext';
 
@@ -140,7 +140,7 @@ export function TicketList() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium leading-6 text-gray-900">
+        <h3 className="text-lg font-medium leading-6 text-gray-100">
           All Tickets
         </h3>
         <div className="flex items-center space-x-2">
@@ -151,29 +151,29 @@ export function TicketList() {
                 setShowAssigneeFilters(false);
                 setShowTeamFilters(false);
               }}
-              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-200 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <Filter size={16} />
               <span>Status</span>
             </button>
             {showStatusFilters && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                <div className="p-3 border-b border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-800">Status</h4>
+              <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-10">
+                <div className="p-3 border-b border-gray-700">
+                  <h4 className="text-sm font-medium text-gray-100">Status</h4>
                 </div>
                 <div className="p-2">
                   {statusOptions.map((option) => (
                     <label
                       key={option.value}
-                      className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"
+                      className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer"
                     >
                       <input
                         type="checkbox"
                         checked={selectedStatuses.includes(option.value)}
                         onChange={() => handleStatusToggle(option.value)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-700 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-gray-200">
                         {option.emoji} {option.label}
                       </span>
                     </label>
@@ -190,40 +190,40 @@ export function TicketList() {
                 setShowStatusFilters(false);
                 setShowTeamFilters(false);
               }}
-              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-200 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <User size={16} />
               <span>Assignee</span>
             </button>
             {showAssigneeFilters && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                <div className="p-3 border-b border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-800">Assigned To</h4>
+              <div className="absolute right-0 mt-2 min-w-[14rem] max-w-[18rem] bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-10">
+                <div className="p-3 border-b border-gray-700">
+                  <h4 className="text-sm font-medium text-gray-100">Assigned To</h4>
                 </div>
                 <div className="p-2">
-                  <label className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer">
+                  <label className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedAssignees.includes('unassigned')}
                       onChange={() => handleAssigneeToggle('unassigned')}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-700 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-gray-200">
                       👤 Unassigned
                     </span>
                   </label>
                   {agents.map((agent) => (
                     <label
                       key={agent.id}
-                      className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"
+                      className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer"
                     >
                       <input
                         type="checkbox"
                         checked={selectedAssignees.includes(agent.id)}
                         onChange={() => handleAssigneeToggle(agent.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-700 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-gray-200 truncate">
                         👤 {agent.email}
                       </span>
                     </label>
@@ -240,40 +240,40 @@ export function TicketList() {
                 setShowStatusFilters(false);
                 setShowAssigneeFilters(false);
               }}
-              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-200 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <Users size={16} />
               <span>Team</span>
             </button>
             {showTeamFilters && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                <div className="p-3 border-b border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-800">Team</h4>
+              <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-lg border border-gray-700 z-10">
+                <div className="p-3 border-b border-gray-700">
+                  <h4 className="text-sm font-medium text-gray-100">Team</h4>
                 </div>
                 <div className="p-2">
-                  <label className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer">
+                  <label className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedTeams.includes('unassigned')}
                       onChange={() => handleTeamToggle('unassigned')}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-700 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-gray-200">
                       👥 No Team
                     </span>
                   </label>
                   {teams.map((team) => (
                     <label
                       key={team.id}
-                      className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"
+                      className="flex items-center space-x-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer"
                     >
                       <input
                         type="checkbox"
                         checked={selectedTeams.includes(team.id)}
                         onChange={() => handleTeamToggle(team.id)}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-700 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">
+                      <span className="text-sm text-gray-200">
                         👥 {team.name}
                       </span>
                     </label>
@@ -286,9 +286,9 @@ export function TicketList() {
       </div>
 
       {filteredTickets.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-900">No tickets found</h3>
-          <p className="mt-2 text-sm text-gray-500">
+        <div className="text-center py-12 bg-gray-800 rounded-lg shadow">
+          <h3 className="text-lg font-medium text-gray-100">No tickets found</h3>
+          <p className="mt-2 text-sm text-gray-400">
             {selectedStatuses.length === 0 
               ? "Please select at least one status filter to view tickets."
               : "No tickets found with the selected status filters."}
@@ -305,23 +305,23 @@ export function TicketList() {
           )}
         </div>
       ) : (
-        <div className="bg-white shadow rounded-lg overflow-y-auto">
-          <ul className="divide-y divide-gray-200">
+        <div className="bg-gray-800 shadow rounded-lg overflow-y-auto">
+          <ul className="divide-y divide-gray-700">
             {filteredTickets.map((ticket) => (
               <li key={ticket.id}>
                 <Link
                   to={`/ticket/${ticket.id}`}
-                  className="block hover:bg-gray-50"
+                  className="block hover:bg-gray-700"
                 >
                   <div className="px-4 py-4 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         {getPriorityIcon(ticket.priority)}
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-900 break-words text-left line-clamp-1">
+                          <p className="text-sm font-medium text-gray-100 break-words text-left line-clamp-1">
                             {ticket.title}
                           </p>
-                          <p className="text-xs text-gray-500 text-left">
+                          <p className="text-xs text-gray-400 text-left">
                             from {ticket.creator.email}
                           </p>
                         </div>
@@ -340,7 +340,7 @@ export function TicketList() {
                       </div>
                     </div>
                     <div className="mt-2">
-                      <p className="text-sm text-gray-500 line-clamp-2 text-left">
+                      <p className="text-sm text-gray-400 line-clamp-2 text-left">
                         {ticket.description}
                       </p>
                     </div>

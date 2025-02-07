@@ -103,29 +103,29 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [selectedIndex]);
 
   return (
-    <div className="flex h-full w-full bg-gray-50">
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
-        <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-800">HelpDesk Pro</h1>
+    <div className="flex h-full w-full bg-gray-900">
+      <aside className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col flex-shrink-0">
+        <div className="p-4 border-b border-gray-700">
+          <h1 className="text-xl font-bold text-gray-100">HelpDesk Pro</h1>
         </div>
         <nav className="flex-1 p-4 overflow-y-auto">
           <Link
             to="/dashboard"
-            className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+            className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/" ? "bg-gray-700 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
           >
             <Home size={20} />
             <span>Dashboard</span>
           </Link>
           <Link
             to="/tickets"
-            className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/tickets" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+            className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/tickets" ? "bg-gray-700 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
           >
             <Inbox size={20} />
             <span>Tickets</span>
           </Link>
           <Link
             to="/create"
-            className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/create" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+            className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/create" ? "bg-gray-700 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
           >
             <Plus size={20} />
             <span>New Ticket</span>
@@ -134,14 +134,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <>
               <Link
                 to="/invite"
-                className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/invite" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+                className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/invite" ? "bg-gray-700 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
               >
                 <UserPlus size={20} />
                 <span>Invite Users</span>
               </Link>
               <Link
                 to="/teams"
-                className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/teams" ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-100"}`}
+                className={`flex items-center space-x-2 p-2 rounded-lg mb-2 ${location.pathname === "/teams" ? "bg-gray-700 text-blue-400" : "text-gray-400 hover:bg-gray-700"}`}
               >
                 <Users size={20} />
                 <span>Teams</span>
@@ -149,8 +149,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </>
           )}
         </nav>
-        <div className="p-4 border-t border-gray-200 space-y-4 flex-shrink-0">
-          <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 w-full">
+        <div className="p-4 border-t border-gray-700 space-y-4 flex-shrink-0">
+          <button className="flex items-center space-x-2 text-gray-400 hover:text-gray-200 w-full">
             <Settings size={20} />
             <span>Settings</span>
           </button>
@@ -164,7 +164,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       <main className="flex-1 flex flex-col min-h-0">
-        <div className="p-4 border-b bg-white flex-shrink-0">
+        <div className="p-4 border-b bg-gray-800 flex-shrink-0">
           <div className="max-w-4xl mx-auto flex items-center">
             <div className="relative flex-1">
               <div className="relative w-full max-w-xl">
@@ -178,7 +178,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     setSelectedIndex(-1);
                   }}
                   onKeyDown={handleKeyDown}
-                  className="w-full px-4 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 text-sm bg-gray-800 text-gray-100 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
                 />
                 <Search
                   className="absolute right-3 top-2.5 text-gray-400"
@@ -188,10 +188,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {searchQuery && (
                 <div 
                   ref={resultsRef}
-                  className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-auto"
+                  className="absolute z-10 w-full mt-1 bg-gray-700 rounded-lg shadow-lg border border-gray-700 max-h-96 overflow-auto"
                 >
                   {isSearching ? (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-center text-gray-400">
                       Searching...
                     </div>
                   ) : searchResults.length > 0 ? (
@@ -204,16 +204,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                             setSearchQuery('');
                             setSelectedIndex(-1);
                           }}
-                          className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex flex-col border-b last:border-b-0
-                            ${index === selectedIndex ? 'bg-blue-50' : ''}`}
+                          className={`w-full px-4 py-3 text-left hover:bg-gray-600 flex flex-col border-b last:border-b-0
+                            ${index === selectedIndex ? 'bg-gray-700' : ''}`}
                         >
-                          <span className="font-medium text-gray-900">{result.title}</span>
+                          <span className="font-medium text-gray-100">{result.title}</span>
                           {result.matched_comment_content ? (
-                            <span className="text-sm text-gray-500 truncate">
+                            <span className="text-sm text-gray-400 truncate">
                               Found in comment: {result.matched_comment_content}
                             </span>
                           ) : (
-                            <span className="text-sm text-gray-500 truncate">
+                            <span className="text-sm text-gray-400 truncate">
                               {result.description}
                             </span>
                           )}
@@ -221,7 +221,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       ))}
                     </div>
                   ) : searchQuery ? (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-center text-gray-400">
                       No results found
                     </div>
                   ) : null}

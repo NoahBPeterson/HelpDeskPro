@@ -28,7 +28,7 @@ export function TicketProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { session } = useAuth();
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const [, setChannel] = useState<RealtimeChannel | null>(null);
 
   const fetchAgentsAndTeams = async (workspaceId: string) => {
     try {

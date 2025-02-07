@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import { useUser } from "../contexts/AuthContext";
-import { Ticket, Comment, TicketWithCreator } from "../types/tickets";
+import { Ticket, Comment } from "../types/tickets";
 import { Team } from "../types/teams";
 import { useTickets } from "../contexts/TicketContext";
 
