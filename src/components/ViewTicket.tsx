@@ -16,6 +16,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useUser } from "../contexts/AuthContext";
 import { Ticket, Comment, TicketWithCreator } from "../types/tickets";
 import { Team } from "../types/teams";
+import { useTickets } from "../contexts/TicketContext";
 
 function formatDate(date: string) {
     return new Date(date).toLocaleString('en-US', {
@@ -38,7 +39,7 @@ export function ViewTicket() {
     const navigate = useNavigate();
     const { session } = useAuth();
     const { role } = useUser();
-    const [ticket, setTicket] = useState<TicketWithCreator>();
+    const { tickets } = useTickets();
     const [comments, setComments] = useState<Comment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -47,13 +48,16 @@ export function ViewTicket() {
     const [agents, setAgents] = useState<Agent[]>([]);
     const [isInternalNote, setIsInternalNote] = useState(false);
     const [teams, setTeams] = useState<Team[]>([]);
+    const [channel, setChannel] = useState<any>(null);
+
+    const ticket = useMemo(() => tickets.find(t => t.id === id), [tickets, id]);
 
     const isAgent = useMemo(() => {
         return role === 'agent' || role === 'admin';
     }, [role]);
 
     useEffect(() => {
-        async function fetchTicket() {
+        async function fetchData() {
             if (!session?.user?.id || !id) {
                 console.log('Missing session or id:', { session: session?.user?.id, id });
                 return;
@@ -71,24 +75,6 @@ export function ViewTicket() {
                     console.error('Error fetching workspace_id:', userError);
                     throw userError;
                 }
-
-                // Fetch ticket
-                const { data: ticketData, error: ticketError } = await supabase
-                    .from('tickets')
-                    .select('*, creator:users!tickets_created_by_user_id_fkey(email)')
-                    .eq('id', id)
-                    .eq('workspace_id', userData.workspace_id)
-                    .single();
-
-                if (ticketError) {
-                    console.error('Error fetching ticket:', ticketError);
-                    throw ticketError;
-                }
-                const ticketWithCreator: TicketWithCreator = {
-                    ...ticketData,
-                    creator: { email: ticketData.creator.email }
-                };
-                setTicket(ticketWithCreator);
 
                 // Fetch agents from the same workspace
                 const { data: agentsData, error: agentsError } = await supabase
@@ -127,15 +113,50 @@ export function ViewTicket() {
                     throw commentsError;
                 }
                 setComments(commentsData);
+
+                // Set up real-time subscription for comments
+                const newChannel = supabase
+                    .channel(`comments-${id}`)
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'comments',
+                            filter: `ticket_id=eq.${id}`
+                        },
+                        async () => {
+                            // Fetch updated comments
+                            const { data: updatedComments, error: updateError } = await supabase
+                                .from('comments')
+                                .select('*, user:users(email)')
+                                .eq('ticket_id', id)
+                                .order('created_at', { ascending: true });
+
+                            if (!updateError) {
+                                setComments(updatedComments);
+                            }
+                        }
+                    )
+                    .subscribe();
+
+                setChannel(newChannel);
             } catch (err) {
-                console.error('Error in fetchTicket:', err);
+                console.error('Error in fetchData:', err);
                 setError('Failed to load ticket details');
             } finally {
                 setIsLoading(false);
             }
         }
 
-        fetchTicket();
+        fetchData();
+
+        // Cleanup subscription
+        return () => {
+            if (channel) {
+                channel.unsubscribe();
+            }
+        };
     }, [session?.user?.id, id]);
 
     const getStatusIcon = useCallback((status: string) => {
@@ -169,16 +190,6 @@ export function ViewTicket() {
                 });
 
             if (error) throw error;
-
-            // Fetch updated comments
-            const { data: commentsData, error: commentsError } = await supabase
-                .from('comments')
-                .select('*, user:users(email)')
-                .eq('ticket_id', ticket.id)
-                .order('created_at', { ascending: true });
-
-            if (commentsError) throw commentsError;
-            setComments(commentsData);
             setNewComment("");
         } catch (err) {
             console.error('Error adding comment:', err);
@@ -186,7 +197,7 @@ export function ViewTicket() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [session?.user?.id, ticket?.id, newComment, isInternalNote, supabase]);
+    }, [session?.user?.id, ticket?.id, newComment, isInternalNote]);
 
     const handleStatusChange = useCallback(async (newStatus: Ticket['status']) => {
         if (!session?.user?.id || !ticket || !isAgent) return;
@@ -207,21 +218,11 @@ export function ViewTicket() {
                     content: `Status changed to ${newStatus}`,
                     type: 'status_change'
                 });
-
-            const { data: commentsData, error: commentsError } = await supabase
-                .from('comments')
-                .select('*, user:users(email)')
-                .eq('ticket_id', ticket.id)
-                .order('created_at', { ascending: true });
-
-            if (commentsError) throw commentsError;
-            setComments(commentsData);
-            setTicket(prev => prev ? { ...prev, status: newStatus, creator: prev.creator } : undefined);
         } catch (err) {
             console.error('Error updating ticket status:', err);
             alert('Failed to update ticket status');
         }
-    }, [session?.user?.id, ticket?.id, isAgent, supabase]);
+    }, [session?.user?.id, ticket?.id, isAgent]);
 
     const handlePriorityChange = useCallback(async (newPriority: Ticket['priority']) => {
         if (!session?.user?.id || !ticket || !isAgent) return;
@@ -242,21 +243,11 @@ export function ViewTicket() {
                     content: `Priority changed to ${newPriority}`,
                     type: 'system'
                 });
-
-            const { data: commentsData, error: commentsError } = await supabase
-                .from('comments')
-                .select('*, user:users(email)')
-                .eq('ticket_id', ticket.id)
-                .order('created_at', { ascending: true });
-
-            if (commentsError) throw commentsError;
-            setComments(commentsData);
-            setTicket(prev => prev ? { ...prev, priority: newPriority, creator: prev.creator } : undefined);
         } catch (err) {
             console.error('Error updating ticket priority:', err);
             alert('Failed to update ticket priority');
         }
-    }, [session?.user?.id, ticket?.id, isAgent, supabase]);
+    }, [session?.user?.id, ticket?.id, isAgent]);
 
     const handleAssigneeChange = useCallback(async (agentId: string) => {
         if (!session?.user?.id || !ticket || !isAgent) return;
@@ -277,21 +268,11 @@ export function ViewTicket() {
                     content: agentId ? `Ticket assigned to ${agents.find(a => a.id === agentId)?.email}` : 'Ticket unassigned',
                     type: 'system'
                 });
-
-            const { data: commentsData, error: commentsError } = await supabase
-                .from('comments')
-                .select('*, user:users(email)')
-                .eq('ticket_id', ticket.id)
-                .order('created_at', { ascending: true });
-
-            if (commentsError) throw commentsError;
-            setComments(commentsData);
-            setTicket(prev => prev ? { ...prev, assigned_to_user_id: agentId, creator: prev.creator } : undefined);
         } catch (err) {
             console.error('Error updating ticket assignee:', err);
             alert('Failed to update ticket assignee');
         }
-    }, [session?.user?.id, ticket?.id, isAgent, agents, supabase]);
+    }, [session?.user?.id, ticket?.id, isAgent, agents]);
 
     const handleTeamChange = useCallback(async (teamId: string) => {
         if (!session?.user?.id || !ticket || !isAgent) return;
@@ -314,21 +295,11 @@ export function ViewTicket() {
                         : 'Ticket removed from team',
                     type: 'system'
                 });
-
-            const { data: commentsData, error: commentsError } = await supabase
-                .from('comments')
-                .select('*, user:users(email)')
-                .eq('ticket_id', ticket.id)
-                .order('created_at', { ascending: true });
-
-            if (commentsError) throw commentsError;
-            setComments(commentsData);
-            setTicket(prev => prev ? { ...prev, team_id: teamId, creator: prev.creator } : undefined);
         } catch (err) {
             console.error('Error updating ticket team:', err);
             alert('Failed to update ticket team');
         }
-    }, [session?.user?.id, ticket?.id, isAgent, teams, supabase]);
+    }, [session?.user?.id, ticket?.id, isAgent, teams]);
 
     if (isLoading) {
         return <div className="p-4 text-center">Loading ticket details...</div>;

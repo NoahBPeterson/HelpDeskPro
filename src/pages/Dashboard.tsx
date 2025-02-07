@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
     CheckCircle,
     Clock,
@@ -6,9 +6,8 @@ import {
     Inbox,
     AlertCircle,
 } from "lucide-react";
-import { supabase } from "../lib/supabase";
-import { useAuth } from "../contexts/AuthContext";
 import { Stats, Activity } from "../types/tickets";
+import { useTickets } from "../contexts/TicketContext";
 
 function formatRelativeTime(date: string) {
     const now = new Date();
@@ -60,78 +59,31 @@ function getPriorityColor(priority: string) {
 }
 
 export function Dashboard() {
-    const { session } = useAuth();
-    const [stats, setStats] = useState<Stats>({
-        total: 0,
-        new: 0,
-        open: 0,
-        pending: 0,
-        solved: 0,
-        closed: 0,
-        highPriority: 0,
-        mediumPriority: 0,
-        lowPriority: 0
-    });
-    const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { tickets, isLoading } = useTickets();
+    
+    // Calculate stats from tickets
+    const stats = useMemo<Stats>(() => ({
+        total: tickets.length,
+        new: tickets.filter(t => t.status === 'new').length,
+        open: tickets.filter(t => t.status === 'open').length,
+        pending: tickets.filter(t => t.status === 'pending').length,
+        solved: tickets.filter(t => t.status === 'solved').length,
+        closed: tickets.filter(t => t.status === 'closed').length,
+        highPriority: tickets.filter(t => t.priority === 'high').length,
+        mediumPriority: tickets.filter(t => t.priority === 'medium').length,
+        lowPriority: tickets.filter(t => t.priority === 'low').length
+    }), [tickets]);
 
-    useEffect(() => {
-        async function fetchDashboardData() {
-            if (!session?.user?.id) return;
-
-            try {
-                // Get user's workspace_id
-                const { data: userData, error: userError } = await supabase
-                    .from('users')
-                    .select('workspace_id')
-                    .eq('id', session.user.id)
-                    .single();
-
-                if (userError) throw userError;
-
-                // Fetch tickets for the workspace
-                const { data: tickets, error: ticketsError } = await supabase
-                    .from('tickets')
-                    .select('*')
-                    .eq('workspace_id', userData.workspace_id)
-                    .order('created_at', { ascending: false });
-
-                if (ticketsError) throw ticketsError;
-
-                // Calculate stats
-                const newStats: Stats = {
-                    total: tickets?.length || 0,
-                    new: tickets?.filter(t => t.status === 'new').length || 0,
-                    open: tickets?.filter(t => t.status === 'open').length || 0,
-                    pending: tickets?.filter(t => t.status === 'pending').length || 0,
-                    solved: tickets?.filter(t => t.status === 'solved').length || 0,
-                    closed: tickets?.filter(t => t.status === 'closed').length || 0,
-                    highPriority: tickets?.filter(t => t.priority === 'high').length || 0,
-                    mediumPriority: tickets?.filter(t => t.priority === 'medium').length || 0,
-                    lowPriority: tickets?.filter(t => t.priority === 'low').length || 0
-                };
-                setStats(newStats);
-
-                // Generate recent activity from tickets
-                if (tickets) {
-                    const recentActivity: Activity[] = tickets.slice(0, 5).map((ticket, index) => ({
-                        id: index,
-                        type: ticket.priority ? 'priority' : 'status',
-                        value: ticket.priority || ticket.status,
-                        message: `Ticket "${ticket.title}" was created`,
-                        time: formatRelativeTime(new Date(ticket.created_at).toISOString())
-                    }));
-                    setRecentActivity(recentActivity);
-                }
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        }
-
-        fetchDashboardData();
-    }, [session?.user?.id]);
+    // Generate recent activity from tickets
+    const recentActivity = useMemo<Activity[]>(() => 
+        tickets.slice(0, 5).map((ticket, index) => ({
+            id: index,
+            type: ticket.priority ? 'priority' : 'status',
+            value: ticket.priority || ticket.status,
+            message: `Ticket "${ticket.title}" was created`,
+            time: formatRelativeTime(ticket.created_at)
+        }))
+    , [tickets]);
 
     if (isLoading) {
         return <div className="p-4 text-center">Loading dashboard...</div>;
@@ -248,7 +200,7 @@ export function Dashboard() {
                                         style={{
                                             width: `${stats.total ? (stats.highPriority / stats.total) * 100 : 0}%`,
                                         }}
-                                    ></div>
+                                    />
                                 </div>
                             </div>
                             <div>
@@ -262,7 +214,7 @@ export function Dashboard() {
                                         style={{
                                             width: `${stats.total ? (stats.mediumPriority / stats.total) * 100 : 0}%`,
                                         }}
-                                    ></div>
+                                    />
                                 </div>
                             </div>
                             <div>
@@ -276,7 +228,7 @@ export function Dashboard() {
                                         style={{
                                             width: `${stats.total ? (stats.lowPriority / stats.total) * 100 : 0}%`,
                                         }}
-                                    ></div>
+                                    />
                                 </div>
                             </div>
                         </div>

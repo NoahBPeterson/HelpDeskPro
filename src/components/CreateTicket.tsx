@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Upload, X, AlertCircle } from "lucide-react";
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { useTickets } from '../contexts/TicketContext'
 
 function CharacterCount({ current, max }: { current: number; max: number }) {
   const percentage = (current / max) * 100;
@@ -53,6 +54,7 @@ interface FormData {
 export function CreateTicket() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { refreshTickets } = useTickets();
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -146,6 +148,9 @@ export function CreateTicket() {
         });
 
       if (ticketError) throw ticketError;
+
+      // Refresh tickets to get the latest data
+      await refreshTickets();
 
       // TODO: Handle file uploads in a future enhancement
       
